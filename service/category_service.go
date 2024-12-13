@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"io"
 	"project/domain"
 	"project/repository"
 
@@ -10,6 +11,7 @@ import (
 
 type CategoryService interface {
 	All(page, limit int) ([]*domain.Category, int64, error)
+	Create(category *domain.Category, file io.Reader, filename string) error
 }
 
 type categoryService struct {
@@ -31,4 +33,11 @@ func (s *categoryService) All(page, limit int) ([]*domain.Category, int64, error
 	}
 
 	return categories, int64(totalItems), nil
+}
+func (s *categoryService) Create(category *domain.Category, file io.Reader, filename string) error {
+	if category.Name == "" {
+		return errors.New("category name is required")
+	}
+
+	return s.repo.Create(category, file, filename)
 }

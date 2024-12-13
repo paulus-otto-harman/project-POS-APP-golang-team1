@@ -47,6 +47,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	categoriesRoutes := r.Group("/categories")
 	{
 		categoriesRoutes.GET("/", ctx.Ctl.CategoryHandler.All)
+		categoriesRoutes.POST("/", ctx.Ctl.CategoryHandler.Create)
 	}
 
 

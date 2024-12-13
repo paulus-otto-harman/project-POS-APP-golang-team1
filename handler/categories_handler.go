@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"project/domain"
 	"project/helper"
 	"project/service"
 
@@ -18,15 +19,17 @@ func NewCategoryController(service service.CategoryService, logger *zap.Logger) 
 	return &CategoryController{service: service, logger: logger}
 }
 
-// Check Email endpoint
-// @Summary Check Email
-// @Description email must be valid when users want to reset their passwords
-// @Tags Auth
+// @Summary Get All Categories
+// @Description Retrieve a list of categories with pagination
+// @Tags Categories
 // @Accept  json
-// @Produce  json
-// @Success 200 {object} handler.Response "email is valid"
-// @Failure 404 {object} handler.Response "user not found"
-// @Router  /users [get]
+// @Produce json
+// @Param page query int false "Page number, default is 1"
+// @Param limit query int false "Number of items per page, default is 10"
+// @Success 200 {object} handler.PaginatedResponse "fetch success"
+// @Failure 404 {object} handler.Response "categories not found"
+// @Failure 500 {object} handler.Response "internal server error"
+// @Router /categories/ [get]
 func (ctrl *CategoryController) All(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
 	limit, _ := helper.Uint(c.DefaultQuery("limit", "10"))
@@ -40,8 +43,58 @@ func (ctrl *CategoryController) All(c *gin.Context) {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
 
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), categories)
+}
+
+// @Summary Create Category
+// @Description Create a new category with an icon
+// @Tags Categories
+// @Accept  multipart/form-data
+// @Produce json
+// @Param name formData string true "Category name"
+// @Param description formData string false "Category description"
+// @Param icon formData file true "Category icon"
+// @Success 201 {object} handler.Response "create success"
+// @Failure 400 {object} handler.Response "Invalid input"
+// @Failure 500 {object} handler.Response "Internal server error"
+// @Router /categories/ [post]
+func (ctrl *CategoryController) Create(c *gin.Context) {
+
+	fileHeader, err := c.FormFile("icon")
+	if fileHeader == nil {
+		ctrl.logger.Error("File icon is missing")
+		BadResponse(c, "File icon is required", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		ctrl.logger.Error("Failed to get file from request", zap.Error(err))
+		BadResponse(c, "Failed get data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctrl.logger.Error("Failed to open file", zap.Error(err))
+		BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	var category domain.Category
+	if err := c.ShouldBind(&category); err != nil {
+		ctrl.logger.Error("invalid input", zap.Error(err))
+		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = ctrl.service.Create(&category, file, fileHeader.Filename)
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "create success", http.StatusCreated, nil)
 }
