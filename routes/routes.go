@@ -44,6 +44,12 @@ func NewRoutes(ctx infra.ServiceContext) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
+	categoriesRoutes := r.Group("/categories")
+	{
+		categoriesRoutes.GET("/", ctx.Ctl.CategoryHandler.All)
+	}
+
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
