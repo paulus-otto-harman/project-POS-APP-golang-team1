@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"mime/multipart"
 	"net/http"
 	"project/domain"
 	"project/helper"
@@ -60,10 +61,27 @@ func (ctrl *CategoryController) All(c *gin.Context) {
 // @Success 201 {object} handler.Response "create success"
 // @Failure 400 {object} handler.Response "Invalid input"
 // @Failure 500 {object} handler.Response "Internal server error"
-// @Router /categories/ [post]
+// @Router /categories/create [post]
 func (ctrl *CategoryController) Create(c *gin.Context) {
 
-	fileHeader, err := c.FormFile("icon")
+	var file multipart.File
+	var fileHeader *multipart.FileHeader
+	var filename string
+	var err error
+
+	fileHeader, err = c.FormFile("icon")
+	if err == nil {
+
+		file, err = fileHeader.Open()
+		if err != nil {
+			ctrl.logger.Error("Failed to open file", zap.Error(err))
+			BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		filename = fileHeader.Filename
+		ctrl.logger.Info("Received new file", zap.String("filename", filename))
+	}
 	if fileHeader == nil {
 		ctrl.logger.Error("File icon is missing")
 		BadResponse(c, "File icon is required", http.StatusBadRequest)
@@ -75,26 +93,106 @@ func (ctrl *CategoryController) Create(c *gin.Context) {
 		return
 	}
 
-	file, err := fileHeader.Open()
-	if err != nil {
-		ctrl.logger.Error("Failed to open file", zap.Error(err))
-		BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
 	var category domain.Category
 	if err := c.ShouldBind(&category); err != nil {
-		ctrl.logger.Error("invalid input", zap.Error(err))
+		ctrl.logger.Error("Invalid input", zap.Error(err))
 		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = ctrl.service.Create(&category, file, fileHeader.Filename)
-	if err != nil {
-		BadResponse(c, err.Error(), http.StatusInternalServerError)
+	if file != nil {
+		newIconURL, err := ctrl.service.UploadIcon(file, filename)
+		if err != nil {
+			BadResponse(c, "Failed to upload new icon: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		category.Icon = newIconURL
+	}
+
+	if err := ctrl.service.Create(&category); err != nil {
+		ctrl.logger.Error("Failed to create category", zap.Error(err))
+		BadResponse(c, "Failed to create category: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	GoodResponseWithData(c, "create success", http.StatusCreated, nil)
+	GoodResponseWithData(c, "create success", http.StatusCreated, category)
+}
+
+// @Summary Update Category
+// @Description Update an existing category with an optional new icon. If no new icon is provided, the existing icon will be retained.
+// @Tags Categories
+// @Accept  multipart/form-data
+// @Produce json
+// @Param id path string true "Category ID" 
+// @Param name formData string false "Category name"
+// @Param description formData string false "Category description"
+// @Param icon formData file false "New category icon" 
+// @Success 200 {object} handler.Response "update success"
+// @Failure 400 {object} handler.Response "invalid input"
+// @Failure 400 {object} handler.Response "file icon is missing"
+// @Failure 404 {object} handler.Response "category not found"
+// @Failure 500 {object} handler.Response "internal server error"
+// @Router /categories/{id} [put]
+func (ctrl *CategoryController) Update(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var category domain.Category
+	if err := ctrl.service.FindByID(&category, id); err != nil {
+		ctrl.logger.Error("Category not found", zap.Error(err))
+		BadResponse(c, "Category not found", http.StatusNotFound)
+		return
+	}
+
+	var file multipart.File
+	var fileHeader *multipart.FileHeader
+	var filename string
+	var err error
+
+	fileHeader, err = c.FormFile("icon")
+	if err == nil {
+
+		file, err = fileHeader.Open()
+		if err != nil {
+			ctrl.logger.Error("Failed to open file", zap.Error(err))
+			BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		filename = fileHeader.Filename
+		ctrl.logger.Info("Received new file", zap.String("filename", filename))
+	}
+	if fileHeader == nil {
+		ctrl.logger.Error("File icon is missing")
+		BadResponse(c, "File icon is required", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		ctrl.logger.Error("Failed to get file from request", zap.Error(err))
+		BadResponse(c, "Failed get data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := c.ShouldBind(&category); err != nil {
+		ctrl.logger.Error("Invalid input", zap.Error(err))
+		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if file != nil {
+		newIconURL, err := ctrl.service.UploadIcon(file, filename)
+		if err != nil {
+			BadResponse(c, "Failed to upload new icon: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		category.Icon = newIconURL
+	}
+
+	if err := ctrl.service.Update(&category); err != nil {
+		ctrl.logger.Error("Failed to update category", zap.Error(err))
+		BadResponse(c, "Failed to update category: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "update success", http.StatusOK, category)
 }

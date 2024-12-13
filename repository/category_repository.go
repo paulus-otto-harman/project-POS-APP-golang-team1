@@ -2,9 +2,7 @@ package repository
 
 import (
 	"errors"
-	"io"
 	"project/domain"
-	"project/helper"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -19,17 +17,9 @@ func NewCategoryRepository(db *gorm.DB, log *zap.Logger) *CategoryRepository {
 	return &CategoryRepository{db: db, log: log}
 }
 
-func (repo CategoryRepository) Create(category *domain.Category, file io.Reader, filename string) error {
+func (repo CategoryRepository) Create(category *domain.Category) error {
 
-	imageURL, err := helper.UploadFileThirdPartyAPI(file, filename)
-	if err != nil {
-		repo.log.Error("Failed to upload file", zap.Error(err))
-		return err
-	}
-
-	category.Icon = imageURL
-
-	err = repo.db.Create(&category).Error
+	err := repo.db.Create(&category).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			repo.log.Error("Duplicate category name", zap.Error(err))
@@ -70,4 +60,23 @@ func (repo CategoryRepository) All(page, limit int) ([]*domain.Category, int64, 
 	}
 
 	return categories, totalItems, nil
+}
+
+func (repo *CategoryRepository) FindByID(category *domain.Category, id string) error {
+	if err := repo.db.First(category, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("category not found")
+		}
+		repo.log.Error("Failed to fetch category by ID", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (repo *CategoryRepository) Update(category *domain.Category) error {
+	if err := repo.db.Save(category).Error; err != nil {
+		repo.log.Error("Failed to update category", zap.Error(err))
+		return err
+	}
+	return nil
 }

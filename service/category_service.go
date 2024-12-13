@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"project/domain"
+	"project/helper"
 	"project/repository"
 
 	"go.uber.org/zap"
@@ -11,7 +12,10 @@ import (
 
 type CategoryService interface {
 	All(page, limit int) ([]*domain.Category, int64, error)
-	Create(category *domain.Category, file io.Reader, filename string) error
+	Create(category *domain.Category) error
+	FindByID(category *domain.Category, id string) error
+	Update(category *domain.Category) error
+	UploadIcon(file io.Reader, filename string) (string, error)
 }
 
 type categoryService struct {
@@ -34,10 +38,34 @@ func (s *categoryService) All(page, limit int) ([]*domain.Category, int64, error
 
 	return categories, int64(totalItems), nil
 }
-func (s *categoryService) Create(category *domain.Category, file io.Reader, filename string) error {
+func (s *categoryService) Create(category *domain.Category) error {
 	if category.Name == "" {
 		return errors.New("category name is required")
 	}
 
-	return s.repo.Create(category, file, filename)
+	return s.repo.Create(category)
+}
+
+func (s *categoryService) FindByID(category *domain.Category, id string) error {
+	if err := s.repo.FindByID(category, id); err != nil {
+		s.log.Error("Failed to find category", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *categoryService) UploadIcon(file io.Reader, filename string) (string, error) {
+	return helper.UploadFileThirdPartyAPI(file, filename)
+}
+
+func (s *categoryService) Update(category *domain.Category) error {
+	if category.Name == "" {
+		return errors.New("category name is required")
+	}
+	
+	if err := s.repo.Update(category); err != nil {
+		s.log.Error("Failed to update category", zap.Error(err))
+		return err
+	}
+	return nil
 }
