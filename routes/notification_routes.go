@@ -11,4 +11,6 @@ func notificationRoutes(ctx infra.ServiceContext, r *gin.Engine) {
 	notifGroup := r.Group("/notifications", ctx.Middleware.Authentication())
 
 	notifGroup.GET("/", notifHandler.GetNotifications)
+	notifGroup.PUT("/:id", notifHandler.UpdateNotificationStatus)
+	notifGroup.PUT("/batch", notifHandler.BatchUpdateNotificationStatus)
 }

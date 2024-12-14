@@ -16,6 +16,11 @@ type Notification struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-" swaggerignore:"true"`
 }
 
+type BatchUpdateNotifRequest struct {
+	NotificationIDs []uint `json:"notification_ids"`
+	Status          string `json:"status"`
+}
+
 // Define a request struct for validation
 type UpdateRequest struct {
 	Status string `json:"status" binding:"required"`
