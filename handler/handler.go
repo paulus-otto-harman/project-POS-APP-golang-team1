@@ -2,6 +2,7 @@ package handler
 
 import (
 	"project/domain"
+	"project/infra/jwt"
 	"project/service"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,9 @@ type Handler struct {
 	UserHandler          UserController
 }
 
-func NewHandler(service service.Service, logger *zap.Logger) *Handler {
+func NewHandler(service service.Service, logger *zap.Logger, jwt jwt.JWT) *Handler {
 	return &Handler{
-		AuthHandler:          *NewAuthController(service.Auth, logger),
+		AuthHandler:          *NewAuthController(service.Auth, logger, jwt),
 		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
 		UserHandler:          *NewUserController(service.User, logger),
 	}

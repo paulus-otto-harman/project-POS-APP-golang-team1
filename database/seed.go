@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"project/domain"
+	"project/domain/seeder"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -26,7 +26,7 @@ func SeedAll(db *gorm.DB) error {
 
 func dataSeeds() []interface{} {
 	return []interface{}{
-		domain.PermissionSeed(),
-		domain.UserSeed(),
+		seeder.Permission(),
+		seeder.User(),
 	}
 }

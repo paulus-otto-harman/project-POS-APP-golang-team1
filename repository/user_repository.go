@@ -28,3 +28,9 @@ func (repo UserRepository) All(user domain.User) ([]domain.User, error) {
 	}
 	return users, nil
 }
+
+func (repo UserRepository) Get(criteria domain.User) (*domain.User, error) {
+	var user domain.User
+	err := repo.db.Where(criteria).First(&user).Error
+	return &user, err
+}

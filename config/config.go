@@ -7,12 +7,15 @@ import (
 )
 
 type Config struct {
-	AppDebug              bool
-	AppSecret             string
-	DB                    DatabaseConfig
-	RedisConfig           RedisConfig
-	ServerPort            string
-	ServerShutdownTimeout uint
+	AppDebug        bool
+	AppSecret       string
+	DB              DatabaseConfig
+	RedisConfig     RedisConfig
+	ServerPort      string
+	ShutdownTimeout int
+
+	PrivateKey string
+	PublicKey  string
 }
 
 type DatabaseConfig struct {
@@ -56,12 +59,16 @@ func LoadConfig() (Config, error) {
 	config := Config{
 		DB: loadDatabaseConfig(),
 
-		AppDebug:   viper.GetBool("APP_DEBUG"),
-		AppSecret:  viper.GetString("APP_SECRET"),
-		ServerPort: viper.GetString("SERVER_PORT"),
+		AppDebug:        viper.GetBool("APP_DEBUG"),
+		AppSecret:       viper.GetString("APP_SECRET"),
+		ServerPort:      viper.GetString("SERVER_PORT"),
+		ShutdownTimeout: viper.GetInt("SHUTDOWN_TIMEOUT"),
+		PrivateKey:      viper.GetString("PRIVATE_KEY"),
+		PublicKey:       viper.GetString("PUBLIC_KEY"),
 
 		RedisConfig: loadRedisConfig(),
 	}
+	log.Println(config)
 	return config, nil
 }
 
@@ -94,6 +101,7 @@ func setDefaultValues() {
 	viper.SetDefault("APP_DEBUG", true)
 	viper.SetDefault("APP_SECRET", "team-1")
 	viper.SetDefault("SERVER_PORT", ":8080")
+	viper.SetDefault("SHUTDOWN_TIMEOUT", 5)
 
 	viper.SetDefault("DB_MIGRATE", false)
 	viper.SetDefault("DB_SEEDING", false)

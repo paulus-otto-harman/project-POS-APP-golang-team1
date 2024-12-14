@@ -1,21 +1,24 @@
 package handler
 
 import (
-	"net/http"
-	"project/domain"
-	"project/service"
-
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"log"
+	"net/http"
+	"project/domain"
+	"project/infra/jwt"
+	"project/service"
+	"strconv"
 )
 
 type AuthController struct {
 	service service.AuthService
 	logger  *zap.Logger
+	jwt     jwt.JWT
 }
 
-func NewAuthController(service service.AuthService, logger *zap.Logger) *AuthController {
-	return &AuthController{service: service, logger: logger}
+func NewAuthController(service service.AuthService, logger *zap.Logger, jwt jwt.JWT) *AuthController {
+	return &AuthController{service, logger, jwt}
 }
 
 // Login endpoint
@@ -30,22 +33,40 @@ func NewAuthController(service service.AuthService, logger *zap.Logger) *AuthCon
 // @Failure 500 {object} handler.Response "server error"
 // @Router  /login [post]
 func (ctrl *AuthController) Login(c *gin.Context) {
-	var user domain.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var login domain.Login
+	if err := c.ShouldBindJSON(&login); err != nil {
+		log.Println(err)
 		BadResponse(c, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	token, isAuthenticated, err := ctrl.service.Login(user)
-	if !isAuthenticated {
+	// Ambil IP address dari request
+	ip := c.ClientIP()
+	if ip == "" {
+		ip = "unknown" // Default jika IP tidak ditemukan
+		ctrl.logger.Warn("Failed to retrieve client IP")
+	}
+
+	user, err := ctrl.service.Login(login.Email, login.Password)
+	if err != nil {
 		BadResponse(c, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
+	// Buat token JWT
+	token, err := ctrl.jwt.CreateToken(user.Email, ip, strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
-		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		ctrl.logger.Error("Failed to create JWT token", zap.Error(err))
+		BadResponse(c, "failed to create token", http.StatusInternalServerError)
 		return
 	}
 
-	GoodResponseWithData(c, "user authenticated", http.StatusOK, gin.H{"token": token})
+	// Buat response data
+	data := gin.H{
+		"user":  user,
+		"token": token,
+	}
+
+	ctrl.logger.Info("User logged in successfully", zap.String("email", user.Email))
+	GoodResponseWithData(c, "user authenticated", http.StatusOK, data)
 }

@@ -13,7 +13,7 @@ type Service struct {
 
 func NewService(repo repository.Repository, log *zap.Logger) Service {
 	return Service{
-		Auth:          NewAuthService(repo.Auth, log),
+		Auth:          NewAuthService(repo.User, log),
 		PasswordReset: NewPasswordResetService(repo.PasswordReset, log),
 		User:          NewUserService(repo.User, log),
 	}
