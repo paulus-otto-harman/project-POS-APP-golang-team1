@@ -28,5 +28,7 @@ func dataSeeds() []interface{} {
 	return []interface{}{
 		domain.UserSeed(),
 		domain.NotificationSeed(),
+		domain.CategorySeed(),
+		domain.ProductSeed(),
 	}
 }
