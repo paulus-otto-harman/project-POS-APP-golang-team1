@@ -3,9 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +10,10 @@ import (
 	"project/infra"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func NewRoutes(ctx infra.ServiceContext) {
@@ -43,6 +44,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.DELETE("/staffs/:id", ctx.Middleware.UserCan("delete-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
+
+	reservationsRoutes := r.Group("/reservations")
+	{
+		reservationsRoutes.GET("/", ctx.Ctl.ReservationHandler.All)
+	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

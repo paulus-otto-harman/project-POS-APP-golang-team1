@@ -1,16 +1,18 @@
 package repository
 
 import (
-	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"project/config"
 	"project/database"
+
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type Repository struct {
 	Auth          AuthRepository
 	PasswordReset PasswordResetRepository
 	User          UserRepository
+	Reservation   ReservationRepository
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -18,5 +20,6 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Auth:          *NewAuthRepository(db, cacher, log),
 		PasswordReset: *NewPasswordResetRepository(db, log),
 		User:          *NewUserRepository(db, log),
+		Reservation:   *NewReservationRepository(db, log),
 	}
 }
