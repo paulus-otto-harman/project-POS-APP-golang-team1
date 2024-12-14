@@ -143,7 +143,7 @@ func (repo *ReservationRepository) Update(reservationID uint, updates map[string
 	var reservation domain.Reservation
 
 	// Cari reservasi berdasarkan ID
-	err := repo.db.Model(&domain.Reservation{}).Where("id = ?", reservationID).Updates(updates).Error
+	err := repo.db.Where("id = ?", reservationID).First(&reservation).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		repo.log.Warn("Reservation not found", zap.Uint("id", reservationID))
 		return errors.New("reservation not found")
@@ -173,7 +173,7 @@ func (repo *ReservationRepository) Update(reservationID uint, updates map[string
 	}
 
 	// Simpan perubahan ke database
-	err = repo.db.Save(&reservation).Error
+	err = repo.db.Model(&reservation).Updates(updates).Error
 	if err != nil {
 		repo.log.Error("Failed to update reservation", zap.Uint("id", reservationID), zap.Error(err))
 		return err
