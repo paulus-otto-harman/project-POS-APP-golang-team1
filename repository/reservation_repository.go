@@ -136,3 +136,49 @@ func (repo *ReservationRepository) GetByID(id uint) (*domain.Reservation, error)
 	repo.log.Info("Reservation found", zap.Uint("id", id))
 	return &reservation, nil
 }
+
+// Update hanya untuk mengubah table number atau status
+func (repo *ReservationRepository) Update(reservationID uint, updates map[string]interface{}) error {
+	repo.log.Debug("Updating reservation", zap.Uint("id", reservationID), zap.Any("updates", updates))
+	var reservation domain.Reservation
+
+	// Cari reservasi berdasarkan ID
+	err := repo.db.Model(&domain.Reservation{}).Where("id = ?", reservationID).Updates(updates).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		repo.log.Warn("Reservation not found", zap.Uint("id", reservationID))
+		return errors.New("reservation not found")
+	}
+
+	// Validasi: Hanya status dan table number yang bisa diubah
+	if tableNumber, ok := updates["table_number"]; ok {
+		if tableNum, valid := tableNumber.(int); valid {
+			if tableNum > 7 {
+				return errors.New("table number cannot exceed 7")
+			}
+			reservation.TableNumber = uint(tableNum)
+		}
+	}
+
+	if status, ok := updates["status"]; ok {
+		if newStatus, valid := status.(string); valid {
+			// Validasi: Hanya 'Canceled' yang diperbolehkan
+			if reservation.Status != "Confirmed" {
+				return errors.New("status can only be changed if it's currently 'Confirmed'")
+			}
+			if newStatus != "Canceled" {
+				return errors.New("status can only be updated to 'Canceled'")
+			}
+			reservation.Status = newStatus
+		}
+	}
+
+	// Simpan perubahan ke database
+	err = repo.db.Save(&reservation).Error
+	if err != nil {
+		repo.log.Error("Failed to update reservation", zap.Uint("id", reservationID), zap.Error(err))
+		return err
+	}
+
+	repo.log.Info("Reservation updated successfully", zap.Uint("id", reservationID))
+	return nil
+}

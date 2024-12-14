@@ -13,6 +13,7 @@ type ReservationService interface {
 	All(timeFilter string) ([]*domain.AllReservation, error)
 	Add(reservationRequest *domain.Reservation) error
 	GetReservationByID(id uint) (*domain.Reservation, error)
+	Update(reservationID uint, updates map[string]interface{}) error
 }
 
 type reservationService struct {
@@ -76,4 +77,34 @@ func (s *reservationService) GetReservationByID(id uint) (*domain.Reservation, e
 	}
 
 	return reservation, nil
+}
+
+func (s *reservationService) Update(reservationID uint, updates map[string]interface{}) error {
+	// Validasi input updates
+	if len(updates) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	// Validasi data sebelum mengirim ke repository
+	if status, ok := updates["status"]; ok {
+		if status != "Canceled" {
+			return errors.New("status can only be updated to 'Canceled'")
+		}
+	}
+
+	if tableNumber, ok := updates["table_number"]; ok {
+		if tableNum, valid := tableNumber.(int); valid && tableNum > 7 {
+			return errors.New("table number cannot exceed 7")
+		}
+	}
+
+	// Panggil repository untuk update data
+	err := s.repo.Update(reservationID, updates)
+	if err != nil {
+		s.log.Error("Failed to update reservation", zap.Uint("id", reservationID), zap.Error(err))
+		return err
+	}
+
+	s.log.Info("Reservation updated successfully", zap.Uint("id", reservationID))
+	return nil
 }

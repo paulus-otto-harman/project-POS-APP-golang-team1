@@ -116,3 +116,67 @@ func (ctrl *ReservationController) GetByID(c *gin.Context) {
 	// Kirimkan response dengan data reservasi
 	GoodResponseWithData(c, "fetch success", http.StatusOK, reservation)
 }
+
+// UpdateReservation endpoint
+// @Summary Update Reservation
+// @Description Update reservation table number or change status to 'Canceled'
+// @Tags Reservation
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Reservation ID"
+// @Param body body domain.Reservation true "Fields to update (table_number or status)"
+// @Success 200 {object} handler.Response "Reservation updated successfully"
+// @Failure 400 {object} handler.Response "Invalid input or validation error"
+// @Failure 404 {object} handler.Response "Reservation not found"
+// @Failure 500 {object} handler.Response "Internal Server Error"
+// @Router /reservations/{id} [put]
+func (ctrl *ReservationController) Update(c *gin.Context) {
+	// Ambil ID dari path parameter
+	idParam := c.Param("id")
+	reservationID, err := strconv.Atoi(idParam)
+	if err != nil {
+		BadResponse(c, "invalid reservation ID", http.StatusBadRequest)
+		return
+	}
+
+	// Bind JSON langsung ke struct domain.Reservation
+	var request domain.Reservation
+	if err := c.ShouldBindJSON(&request); err != nil {
+		BadResponse(c, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Siapkan map untuk fields yang akan diupdate
+	updates := map[string]interface{}{}
+	if request.TableNumber > 0 { // Hanya tambahkan jika table_number tidak 0
+		updates["table_number"] = request.TableNumber
+	}
+	if request.Status != "" { // Hanya tambahkan jika status tidak kosong
+		updates["status"] = request.Status
+	}
+
+	// Validasi: Harus ada field yang diupdate
+	if len(updates) == 0 {
+		BadResponse(c, "no fields to update", http.StatusBadRequest)
+		return
+	}
+
+	// Panggil service untuk update data
+	err = ctrl.service.Update(uint(reservationID), updates)
+	if err != nil {
+		if err.Error() == "reservation not found" {
+			BadResponse(c, err.Error(), http.StatusNotFound)
+			return
+		}
+		if err.Error() == "status can only be updated to 'Canceled'" ||
+			err.Error() == "table number cannot exceed 7" {
+			BadResponse(c, err.Error(), http.StatusBadRequest)
+			return
+		}
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Berhasil update
+	GoodResponseWithData(c, "reservation updated successfully", http.StatusOK, nil)
+}
