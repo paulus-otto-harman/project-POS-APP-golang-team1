@@ -46,6 +46,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	notificationRoutes(ctx, r)
+
 	gracefulShutdown(ctx, r.Handler())
 }
 
