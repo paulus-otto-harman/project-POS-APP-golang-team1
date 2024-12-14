@@ -80,3 +80,36 @@ func (repo *CategoryRepository) Update(category *domain.Category) error {
 	}
 	return nil
 }
+
+func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
+	var products []*domain.Product
+	var totalItems int64
+
+	query := repo.db.Model(&domain.Product{})
+	if categoryID != "" {
+		query = query.Where("category_id = ?", categoryID)
+	}
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		repo.log.Error("Failed to count total products", zap.Error(err))
+		return nil, 0, err
+	}
+
+	if totalItems == 0 {
+		repo.log.Warn("No products found")
+		return []*domain.Product{}, 0, nil
+	}
+
+	err := query.Preload("Category", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, name, created_at, updated_at")
+	}).
+		Offset((page - 1) * limit).
+		Limit(limit).
+		Find(&products).Error
+	if err != nil {
+		repo.log.Error("Failed to fetch products", zap.Error(err))
+		return nil, 0, err
+	}
+
+	return products, totalItems, nil
+}
