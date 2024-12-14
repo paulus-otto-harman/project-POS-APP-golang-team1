@@ -3,9 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +10,10 @@ import (
 	"project/infra"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func NewRoutes(ctx infra.ServiceContext) {
@@ -57,6 +58,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	notificationRoutes(ctx, r)
 
 	gracefulShutdown(ctx, r.Handler())
 }
