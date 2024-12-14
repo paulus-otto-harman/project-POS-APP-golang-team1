@@ -12,6 +12,7 @@ type Handler struct {
 	AuthHandler          AuthController
 	PasswordResetHandler PasswordResetController
 	UserHandler          UserController
+	CategoryHandler      CategoryController
 }
 
 func NewHandler(service service.Service, logger *zap.Logger) *Handler {
@@ -19,6 +20,7 @@ func NewHandler(service service.Service, logger *zap.Logger) *Handler {
 		AuthHandler:          *NewAuthController(service.Auth, logger),
 		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
 		UserHandler:          *NewUserController(service.User, logger),
+		CategoryHandler:      *NewCategoryController(service.Category, logger),
 	}
 }
 
