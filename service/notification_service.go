@@ -20,6 +20,16 @@ type notificationService struct {
 	log  *zap.Logger
 }
 
+// CreateNotification implements NotificationService.
+func (n *notificationService) CreateNotificationLowStock() error {
+	n.log.Info("Creating a new notification")
+	newNotif := domain.Notification{
+		Title:   "Low Inventory Alert",
+		Content: "This is to notify you that the following items are running low in stock:",
+	}
+	return n.repo.Create(newNotif)
+}
+
 // DeleteNotification implements NotificationService.
 func (n *notificationService) DeleteNotification(id uint) error {
 	n.log.Info("Deleting a notification")

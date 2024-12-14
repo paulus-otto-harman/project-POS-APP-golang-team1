@@ -38,6 +38,30 @@ func (ctrl *NotificationController) GetNotifications(c *gin.Context) {
 
 	GoodResponseWithData(c, "Notification fetched", http.StatusOK, notification)
 }
+
+// SendNotificationLowStock godoc
+// @Summary      Send low stock notification
+// @Description  Check inventory stock and send low stock notifications if necessary
+// @Tags         Notifications
+// @Success      200  {object}  Response
+// @Failure      500  {object}  Response
+// @Router       /notifications/low-stock [post]
+func (ctrl *NotificationController) SendNotificationLowStock(c *gin.Context) {
+	/*
+		TODO:
+		- check if inventory stock are less than 25
+		- if there are no inventory stock less than 25 return good response no need to send notification
+	*/
+
+	err := ctrl.service.Notification.CreateNotificationLowStock()
+	if err != nil {
+		ctrl.logger.Error("failed to send low stock notification", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "Low stock notification sent", http.StatusOK, nil)
+}
+
 // UpdateNotificationStatus godoc
 // @Summary      Update notification status
 // @Description  Update the status of a single notification
