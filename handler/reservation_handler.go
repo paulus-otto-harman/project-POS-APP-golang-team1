@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"project/domain"
 	"project/service"
 
 	"github.com/gin-gonic/gin"
@@ -47,4 +48,32 @@ func (ctrl *ReservationController) All(c *gin.Context) {
 
 	// Kirimkan response dengan data reservasi yang ditemukan
 	GoodResponseWithData(c, "fetch success", http.StatusOK, reservations)
+}
+
+// @Summary Create Reservation
+// @Description Add a new reservation to the system
+// @Tags Reservations
+// @Accept  json
+// @Produce json
+// @Param reservation body domain.Reservation true "Reservation details"
+// @Success 201 {object} handler.Response "Reservation successfully created"
+// @Failure 400 {object} handler.Response "Invalid input"
+// @Failure 500 {object} handler.Response "Internal server error"
+// @Router /reservations/ [post]
+func (ctrl *ReservationController) Add(c *gin.Context) {
+	var reservationRequest domain.Reservation
+	if err := c.ShouldBindJSON(&reservationRequest); err != nil {
+		BadResponse(c, "Invalid reservation data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Call the service layer to add the reservation
+	err := ctrl.service.Add(&reservationRequest)
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return a successful response with the reservation data
+	GoodResponseWithData(c, "Reservation success", http.StatusCreated, reservationRequest)
 }

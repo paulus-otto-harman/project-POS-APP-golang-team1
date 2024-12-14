@@ -48,6 +48,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	reservationsRoutes := r.Group("/reservations")
 	{
 		reservationsRoutes.GET("/", ctx.Ctl.ReservationHandler.All)
+		reservationsRoutes.POST("/", ctx.Ctl.ReservationHandler.Add)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
