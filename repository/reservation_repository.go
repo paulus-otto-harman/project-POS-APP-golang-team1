@@ -21,8 +21,8 @@ func NewReservationRepository(db *gorm.DB, log *zap.Logger) *ReservationReposito
 // Create untuk menambahkan reservasi baru
 func (repo *ReservationRepository) Add(reservation *domain.Reservation) error {
 	// Validasi Status
-	if reservation.Status != "Confirmed" && reservation.Status != "Canceled" {
-		return errors.New("status must be either 'Confirmed' or 'Canceled'")
+	if reservation.Status != "Confirmed" {
+		return errors.New("status must be 'Confirmed' ")
 	}
 
 	// Validasi Pax Number (max 8)
@@ -119,4 +119,20 @@ func (repo *ReservationRepository) All(timeFilter string) ([]*domain.AllReservat
 	}
 
 	return reservations, nil
+}
+
+// GetByID mengambil detail reservasi berdasarkan ID
+func (repo *ReservationRepository) GetByID(id uint) (*domain.Reservation, error) {
+	var reservation domain.Reservation
+
+	// Cari reservasi berdasarkan ID
+	err := repo.db.First(&reservation, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		repo.log.Warn("Reservation not found", zap.Uint("id", id))
+		return nil, errors.New("reservation not found")
+	}
+
+	// Jika berhasil ditemukan
+	repo.log.Info("Reservation found", zap.Uint("id", id))
+	return &reservation, nil
 }

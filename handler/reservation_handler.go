@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"project/domain"
 	"project/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -76,4 +77,42 @@ func (ctrl *ReservationController) Add(c *gin.Context) {
 
 	// Return a successful response with the reservation data
 	GoodResponseWithData(c, "Reservation success", http.StatusCreated, reservationRequest)
+}
+
+// GetReservationByID endpoint
+// @Summary Get Reservation By ID
+// @Description Get reservation details by reservation ID
+// @Tags Reservation
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Reservation ID"
+// @Success 200 {object} handler.Response "Successfully fetched reservation"
+// @Failure 404 {object} handler.Response "Reservation not found"
+// @Failure 500 {object} handler.Response "Internal Server Error"
+// @Router  /reservations/{id} [get]
+func (ctrl *ReservationController) GetByID(c *gin.Context) {
+	// Ambil ID dari parameter path
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		// Jika ID tidak valid, kembalikan status 400 (Bad Request)
+		BadResponse(c, "invalid reservation ID", http.StatusBadRequest)
+		return
+	}
+
+	// Panggil service untuk mendapatkan reservasi berdasarkan ID
+	reservation, err := ctrl.service.GetReservationByID(uint(id))
+	if err != nil {
+		// Jika reservasi tidak ditemukan, kembalikan status 404
+		if err.Error() == "reservation not found" {
+			BadResponse(c, err.Error(), http.StatusNotFound)
+			return
+		}
+		// Jika terjadi error lain, kembalikan status 500
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Kirimkan response dengan data reservasi
+	GoodResponseWithData(c, "fetch success", http.StatusOK, reservation)
 }

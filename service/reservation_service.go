@@ -12,6 +12,7 @@ import (
 type ReservationService interface {
 	All(timeFilter string) ([]*domain.AllReservation, error)
 	Add(reservationRequest *domain.Reservation) error
+	GetReservationByID(id uint) (*domain.Reservation, error)
 }
 
 type reservationService struct {
@@ -37,8 +38,8 @@ func (s *reservationService) All(timeFilter string) ([]*domain.AllReservation, e
 
 func (s *reservationService) Add(reservationRequest *domain.Reservation) error {
 	// Validasi status hanya boleh Confirmed atau Canceled
-	if reservationRequest.Status != "Confirmed" && reservationRequest.Status != "Canceled" {
-		return errors.New("status must be either 'Confirmed' or 'Canceled'")
+	if reservationRequest.Status != "Confirmed" {
+		return errors.New("status must be 'Confirmed' ")
 	}
 
 	// Validasi Pax Number (maksimal 8 orang)
@@ -65,4 +66,14 @@ func (s *reservationService) Add(reservationRequest *domain.Reservation) error {
 
 	s.log.Info("Reservation added successfully")
 	return nil
+}
+
+func (s *reservationService) GetReservationByID(id uint) (*domain.Reservation, error) {
+	reservation, err := s.repo.GetByID(id)
+	if err != nil {
+		s.log.Error("Failed to fetch reservation by ID", zap.Uint("id", id), zap.Error(err))
+		return nil, err
+	}
+
+	return reservation, nil
 }
