@@ -1,9 +1,8 @@
 package database
 
 import (
-	"project/domain"
-
 	"gorm.io/gorm"
+	"project/domain"
 )
 
 func Migrate(db *gorm.DB) error {

@@ -1,11 +1,10 @@
 package repository
 
 import (
-	"project/config"
-	"project/database"
-
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"project/config"
+	"project/database"
 )
 
 type Repository struct {
