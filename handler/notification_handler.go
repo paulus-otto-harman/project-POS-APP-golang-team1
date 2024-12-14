@@ -77,6 +77,31 @@ func (ctrl *NotificationController) UpdateNotificationStatus(c *gin.Context) {
 	GoodResponseWithData(c, "Notification status updated successfully", http.StatusOK, nil)
 }
 
+// DeleteNotification godoc
+// @Summary      Delete notification
+// @Description  Delete a notification by ID
+// @Tags         Notifications
+// @Param        id  path  int  true  "Notification ID"
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
+// @Failure      500  {object}  Response
+// @Router       /notifications/{id} [delete]
+func (ctrl *NotificationController) DeleteNotification(c *gin.Context) {
+	id := c.Param("id")
+	notifID, err := helper.Uint(id)
+	if err != nil {
+		ctrl.logger.Error("failed to parse notification id", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusBadRequest)
+	}
+	err = ctrl.service.Notification.DeleteNotification(notifID)
+	if err != nil {
+		ctrl.logger.Error("failed to delete notification", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "Notification deleted", http.StatusOK, nil)
+}
+
 // BatchUpdateNotificationStatus godoc
 // @Summary      Batch update notification statuses
 // @Description  Update statuses for multiple notifications

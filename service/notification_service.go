@@ -20,6 +20,12 @@ type notificationService struct {
 	log  *zap.Logger
 }
 
+// DeleteNotification implements NotificationService.
+func (n *notificationService) DeleteNotification(id uint) error {
+	n.log.Info("Deleting a notification")
+	return n.repo.Delete(id)
+}
+
 // GetAllNotifications implements NotificationService.
 func (n *notificationService) GetAllNotifications(status string) ([]domain.Notification, error) {
 	n.log.Info("Fetching all notifications")
