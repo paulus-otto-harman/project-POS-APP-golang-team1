@@ -82,7 +82,7 @@ func (s *reservationService) GetReservationByID(id uint) (*domain.Reservation, e
 func (s *reservationService) Update(reservationID uint, updates map[string]interface{}) error {
 	// Validasi input updates
 	if len(updates) == 0 {
-		return errors.New("no fields to update")
+		return errors.New("table number cannot 0")
 	}
 
 	// Validasi data sebelum mengirim ke repository

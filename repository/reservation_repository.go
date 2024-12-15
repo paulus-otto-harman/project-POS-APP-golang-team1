@@ -31,8 +31,8 @@ func (repo *ReservationRepository) Add(reservation *domain.Reservation) error {
 	}
 
 	// Validasi Table Number (max 7)
-	if reservation.TableNumber > 7 {
-		return errors.New("table number cannot exceed 7")
+	if reservation.TableNumber <= 0 || reservation.TableNumber > 7 {
+		return errors.New("table number cannot 0 or exceed 7")
 	}
 
 	// Validasi Reservation Date & Time (tidak boleh masa lalu)
@@ -153,24 +153,9 @@ func (repo *ReservationRepository) Update(reservationID uint, updates map[string
 	// Validasi: Hanya status dan table number yang bisa diubah
 	if tableNumber, ok := updates["table_number"]; ok {
 		if tableNum, valid := tableNumber.(int); valid {
-			if tableNum > 7 {
-				return errors.New("table number cannot exceed 7")
+			if tableNum <= 0 || tableNum > 7 {
+				return errors.New("table number cannot 0 or exceed 7")
 			}
-
-			// Validasi apakah table_number, reservation_date, dan reservation_time sudah ada
-			var existingReservation domain.Reservation
-			err := repo.db.Where("reservation_date = ? AND reservation_time = ? AND table_number = ? AND id != ?",
-				reservation.ReservationDate,
-				reservation.ReservationTime,
-				tableNum,
-				reservationID,
-			).First(&existingReservation).Error
-
-			if err == nil {
-				return errors.New("this table is already reserved at the selected time")
-			}
-
-			// Jika tidak ada konflik, perbarui table_number
 			reservation.TableNumber = uint(tableNum)
 		}
 	}

@@ -157,7 +157,7 @@ func (ctrl *ReservationController) Update(c *gin.Context) {
 
 	// Validasi: Harus ada field yang diupdate
 	if len(updates) == 0 {
-		BadResponse(c, "no fields to update", http.StatusBadRequest)
+		BadResponse(c, "Table Number cannot 0", http.StatusBadRequest)
 		return
 	}
 
