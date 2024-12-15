@@ -10,6 +10,7 @@ type Config struct {
 	AppDebug        bool
 	AppSecret       string
 	DB              DatabaseConfig
+	Email           EmailConfig
 	RedisConfig     RedisConfig
 	ServerPort      string
 	ShutdownTimeout int
@@ -27,6 +28,12 @@ type DatabaseConfig struct {
 
 	Migrate bool
 	Seeding bool
+}
+
+type EmailConfig struct {
+	ApiKey    string
+	FromName  string
+	FromEmail string
 }
 
 type RedisConfig struct {
@@ -57,7 +64,8 @@ func LoadConfig() (Config, error) {
 
 	// add value to the config
 	config := Config{
-		DB: loadDatabaseConfig(),
+		DB:    loadDatabaseConfig(),
+		Email: loadEmailConfig(),
 
 		AppDebug:        viper.GetBool("APP_DEBUG"),
 		AppSecret:       viper.GetString("APP_SECRET"),
@@ -68,7 +76,6 @@ func LoadConfig() (Config, error) {
 
 		RedisConfig: loadRedisConfig(),
 	}
-	log.Println(config)
 	return config, nil
 }
 
@@ -81,6 +88,14 @@ func loadDatabaseConfig() DatabaseConfig {
 		Name:     viper.GetString("DB_NAME"),
 		Migrate:  viper.GetBool("DB_MIGRATE"),
 		Seeding:  viper.GetBool("DB_SEEDING"),
+	}
+}
+
+func loadEmailConfig() EmailConfig {
+	return EmailConfig{
+		ApiKey:    viper.GetString("MAILERSEND_API_KEY"),
+		FromName:  viper.GetString("MAILERSEND_FROM_NAME"),
+		FromEmail: viper.GetString("MAILERSEND_FROM_EMAIL"),
 	}
 }
 

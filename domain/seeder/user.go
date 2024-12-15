@@ -5,18 +5,12 @@ import (
 	"project/helper"
 )
 
-const (
-	SuperAdmin domain.UserRole = "super admin"
-	Admin      domain.UserRole = "admin"
-	Staff      domain.UserRole = "staff"
-)
-
 func User() []domain.User {
 	return []domain.User{
 		{
 			Email:    "super@mail.com",
 			Password: helper.HashPassword("super"),
-			Role:     SuperAdmin,
+			Role:     domain.SuperAdmin,
 			Profile: domain.Profile{
 				FullName: "Super Admin",
 				Phone:    "00",
@@ -26,7 +20,7 @@ func User() []domain.User {
 		{
 			Email:    "admin@mail.com",
 			Password: helper.HashPassword("admin"),
-			Role:     Admin,
+			Role:     domain.Admin,
 			Profile: domain.Profile{
 				FullName: "Admin Satu",
 				Phone:    "01",
@@ -41,7 +35,7 @@ func User() []domain.User {
 		{
 			Email:    "staff@mail.com",
 			Password: helper.HashPassword("staff"),
-			Role:     Staff,
+			Role:     domain.Staff,
 			Profile: domain.Profile{
 				FullName: "Staff Satu",
 				Phone:    "02",

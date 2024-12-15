@@ -31,8 +31,6 @@ type customClaims struct {
 }
 
 func NewJWT(privateKey, publicKey string, log *zap.Logger) JWT {
-	log.Info("priv", zap.String("key", privateKey))
-	log.Info("pub", zap.String("key", publicKey))
 	return JWT{
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,

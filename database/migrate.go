@@ -28,11 +28,13 @@ func autoMigrates(db *gorm.DB) error {
 		&domain.Permission{},
 		&domain.User{},
 		&domain.Profile{},
+		&domain.PasswordResetToken{},
 	)
 }
 
 func dropTables(db *gorm.DB) error {
 	return db.Migrator().DropTable(
+		&domain.PasswordResetToken{},
 		&domain.Profile{},
 		&domain.User{},
 		&domain.Permission{},

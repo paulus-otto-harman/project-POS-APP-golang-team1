@@ -20,9 +20,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/register", ctx.Ctl.UserHandler.Registration)
-	r.GET("/users", ctx.Ctl.UserHandler.All)
 	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
+	r.PUT("/user", ctx.Ctl.UserHandler.Update)
 
 	r.GET("/staffs", ctx.Middleware.UserCan("list-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})

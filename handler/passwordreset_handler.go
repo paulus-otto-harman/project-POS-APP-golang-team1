@@ -2,18 +2,20 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
 	"project/domain"
 	"project/service"
 )
 
 type PasswordResetController struct {
-	service service.PasswordResetService
+	service service.Service
 	logger  *zap.Logger
 }
 
-func NewPasswordResetController(service service.PasswordResetService, logger *zap.Logger) *PasswordResetController {
+func NewPasswordResetController(service service.Service, logger *zap.Logger) *PasswordResetController {
 	return &PasswordResetController{service: service, logger: logger}
 }
 
@@ -23,20 +25,43 @@ func NewPasswordResetController(service service.PasswordResetService, logger *za
 // @Tags Auth
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} handler.Response "password reset link sent"
-// @Failure 500 {object} handler.Response "failed to reset password"
+// @Success 200 {object} handler.Response "OTP sent"
+// @Failure 500 {object} handler.Response "failed to send OTP"
 // @Router  /password-reset [post]
 func (ctrl *PasswordResetController) Create(c *gin.Context) {
-	var passwordResetToken domain.PasswordResetToken
-	if err := c.ShouldBindJSON(&passwordResetToken); err != nil {
+	var requestOTP domain.RequestOTP
+
+	if err := c.ShouldBindJSON(&requestOTP); err != nil {
 		BadResponse(c, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if err := ctrl.service.Create(&passwordResetToken); err != nil {
-		BadResponse(c, err.Error(), http.StatusInternalServerError)
+	user, err := ctrl.service.User.Get(domain.User{Email: requestOTP.Email})
+	if err != nil {
+		BadResponse(c, "user not found", http.StatusNotFound)
 		return
 	}
 
-	GoodResponseWithData(c, "user registered", http.StatusCreated, passwordResetToken)
+	otp := ctrl.service.Otp.Generate()
+
+	passwordResetToken := domain.PasswordResetToken{Email: user.Email, Otp: otp}
+	if err = ctrl.service.PasswordReset.Create(&passwordResetToken); err != nil {
+		BadResponse(c, "fail to create OTP", http.StatusInternalServerError)
+		return
+	}
+
+	var emailId string
+	emailId, err = ctrl.service.Email.Send(passwordResetToken.Email, "Request OTP", "otp", struct {
+		ID  uuid.UUID
+		OTP string
+	}{ID: passwordResetToken.ID, OTP: passwordResetToken.Otp})
+	if err != nil {
+		ctrl.logger.Error("failed to send email", zap.Error(err))
+		BadResponse(c, "failed to send email", http.StatusInternalServerError)
+		return
+	}
+
+	log.Println(emailId)
+
+	GoodResponseWithData(c, "OTP sent", http.StatusCreated, nil)
 }

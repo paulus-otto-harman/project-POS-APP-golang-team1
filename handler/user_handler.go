@@ -66,3 +66,7 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 
 	GoodResponseWithData(c, "user registered", http.StatusCreated, user)
 }
+
+func (ctrl *UserController) Update(c *gin.Context) {
+
+}

@@ -7,6 +7,12 @@ import (
 
 type UserRole string
 
+const (
+	SuperAdmin UserRole = "super admin"
+	Admin      UserRole = "admin"
+	Staff      UserRole = "staff"
+)
+
 type User struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Email     string         `gorm:"unique" example:"admin@mail.com" json:"email"`

@@ -1,13 +1,15 @@
 package domain
 
 import (
+	"database/sql"
 	"github.com/google/uuid"
 	"time"
 )
 
 type PasswordResetToken struct {
-	Token     uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"token"`
-	Email     string    `json:"email" json:"email"`
-	CreatedAt time.Time `gorm:"default:now()" json:"created_at"`
-	ExpiredAt time.Time `gorm:"default:now() + '5 minutes'::interval" json:"expired_at"`
+	ID        uuid.UUID    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	Email     string       `gorm:"size:30" json:"email" json:"email"`
+	Otp       string       `gorm:"size:8" json:"otp" json:"otp"`
+	CreatedAt time.Time    `gorm:"default:now()" json:"created_at"`
+	ExpiredAt sql.NullTime `json:"expired_at"`
 }

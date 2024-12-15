@@ -18,7 +18,7 @@ type Handler struct {
 func NewHandler(service service.Service, logger *zap.Logger, jwt jwt.JWT) *Handler {
 	return &Handler{
 		AuthHandler:          *NewAuthController(service.Auth, logger, jwt),
-		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
+		PasswordResetHandler: *NewPasswordResetController(service, logger),
 		UserHandler:          *NewUserController(service.User, logger),
 	}
 }
