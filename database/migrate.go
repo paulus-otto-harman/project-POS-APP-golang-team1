@@ -27,6 +27,9 @@ func autoMigrates(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&domain.Permission{},
 		&domain.User{},
+		&domain.Notification{},
+		&domain.Category{},
+		&domain.Product{},
 		&domain.Profile{},
 		&domain.PasswordResetToken{},
 	)
@@ -37,6 +40,9 @@ func dropTables(db *gorm.DB) error {
 		&domain.PasswordResetToken{},
 		&domain.Profile{},
 		&domain.User{},
+		&domain.Notification{},
+		&domain.Category{},
+		&domain.Product{},
 		&domain.Permission{},
 		"user_permissions",
 	)

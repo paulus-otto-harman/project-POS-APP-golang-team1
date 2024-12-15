@@ -12,6 +12,8 @@ type Service struct {
 	Otp           OtpService
 	PasswordReset PasswordResetService
 	User          UserService
+	Notification  NotificationService
+	Category      CategoryService
 }
 
 func NewService(repo repository.Repository, appConfig config.Config, log *zap.Logger) Service {
@@ -21,5 +23,7 @@ func NewService(repo repository.Repository, appConfig config.Config, log *zap.Lo
 		Otp:           NewOtpService(log),
 		PasswordReset: NewPasswordResetService(repo.PasswordReset, log),
 		User:          NewUserService(repo.User, log),
+		Notification:  NewNotificationService(repo.Notification, log),
+		Category:      NewCategoryService(repo.Category, log),
 	}
 }
