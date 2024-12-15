@@ -44,8 +44,9 @@ func (repo *ReservationRepository) Add(reservation *domain.Reservation) error {
 	var existingReservation domain.Reservation
 	err := repo.db.Where("reservation_date = ? AND reservation_time = ? AND table_number = ?", reservation.ReservationDate, reservation.ReservationTime, reservation.TableNumber).
 		First(&existingReservation).Error
-	if err == nil {
-		// Table already reserved
+
+	if err == nil && existingReservation.Status != "Canceled" {
+		// Jika ada reservasi dengan status selain 'Canceled', blokir reservasi baru
 		return errors.New("this table is already reserved at the selected time")
 	}
 
@@ -155,6 +156,21 @@ func (repo *ReservationRepository) Update(reservationID uint, updates map[string
 			if tableNum > 7 {
 				return errors.New("table number cannot exceed 7")
 			}
+
+			// Validasi apakah table_number, reservation_date, dan reservation_time sudah ada
+			var existingReservation domain.Reservation
+			err := repo.db.Where("reservation_date = ? AND reservation_time = ? AND table_number = ? AND id != ?",
+				reservation.ReservationDate,
+				reservation.ReservationTime,
+				tableNum,
+				reservationID,
+			).First(&existingReservation).Error
+
+			if err == nil {
+				return errors.New("this table is already reserved at the selected time")
+			}
+
+			// Jika tidak ada konflik, perbarui table_number
 			reservation.TableNumber = uint(tableNum)
 		}
 	}

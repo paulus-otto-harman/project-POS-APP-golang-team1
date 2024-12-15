@@ -76,7 +76,7 @@ func (ctrl *ReservationController) Add(c *gin.Context) {
 	}
 
 	// Return a successful response with the reservation data
-	GoodResponseWithData(c, "Reservation success", http.StatusCreated, reservationRequest)
+	GoodResponseWithData(c, "Reservation success", http.StatusCreated, nil)
 }
 
 // GetReservationByID endpoint
