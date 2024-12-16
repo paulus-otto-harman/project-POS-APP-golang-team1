@@ -25,25 +25,18 @@ type Order struct {
 }
 
 func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
-	var orderItems []OrderItem
+	var totalSubTotal float64
 
-	if err := tx.Where("order_id = ?", o.ID).Find(&orderItems).Error; err != nil {
-		return errors.New("failed to calculate order amount")
+	for i, item := range o.OrderItems {
+		var product Product
+		if err := tx.First(&product, item.ProductID).Error; err != nil {
+			return fmt.Errorf("product not found for product_id %d", item.ProductID)
+		}
+		o.OrderItems[i].SubTotal = product.Price * float64(item.Quantity)
+		totalSubTotal += o.OrderItems[i].SubTotal
 	}
-
-	fmt.Printf("Found %d order items for OrderID %d\n", len(orderItems), o.ID)
-
-	totalSubTotal := 0.0
-	for _, item := range orderItems {
-		fmt.Printf("OrderItem SubTotal: %.2f\n", item.SubTotal)
-		totalSubTotal += item.SubTotal
-	}
-
-	fmt.Printf("Total SubTotal: %.2f\n", totalSubTotal)
 
 	o.Amount = totalSubTotal + (totalSubTotal * o.Tax / 100)
-	fmt.Printf("Order Amount: %.2f\n", o.Amount)
-
 	return nil
 }
 
@@ -77,98 +70,116 @@ func (oi *OrderItem) BeforeSave(tx *gorm.DB) (err error) {
 func OrderSeed() []Order {
 	return []Order{
 		{
-			ID:        1,
-			TableID:   1,
-			Name:      "John Doe",
-			CodeOrder: "ORD001",
-			// Amount:          150.75,
+			ID:              1,
+			TableID:         1,
+			Name:            "John Doe",
+			CodeOrder:       "ORD001",
+			Tax:             10.0,
 			PaymentMethodID: 1,
 			Status:          "In Process",
 			OrderItems: []OrderItem{
 				{
-					OrderID:   1,
 					ProductID: 1,
 					Quantity:  2,
-					// SubTotal:  300.50,
+					Status: "In The Kitchen",
+				},
+				{
+					ProductID: 2,
+					Quantity:  1,
+					Status: "Cooking Now",
+				},
+			},
+		},
+		{
+			ID:              2,
+			TableID:         2,
+			Name:            "Alex",
+			CodeOrder:       "ORD002",
+			Tax:             10.0,
+			PaymentMethodID: 2,
+			Status:          "Completed",
+			OrderItems: []OrderItem{
+				{
+					ProductID: 3,
+					Quantity:  3,
+					Status: "Ready To Serve",
+				},
+				{
+					ProductID: 12,
+					Quantity:  3,
+					Status: "Ready To Serve",
+				},
+				{
+					ProductID: 6,
+					Quantity:  3,
+					Status: "Ready To Serve",
+				},
+			},
+		},
+		{
+			ID:              3,
+			TableID:         3,
+			Name:            "Elia",
+			CodeOrder:       "ORD003",
+			Tax:             10.0,
+			PaymentMethodID: 3,
+			Status:          "Cancelled",
+			OrderItems: []OrderItem{
+				{
+					ProductID: 4,
+					Quantity:  1,
+					Status: "In The Kitchen",
+				},
+				{
+					ProductID: 15,
+					Quantity:  1,
 					Status: "In The Kitchen",
 				},
 			},
 		},
 		{
-			ID:        2,
-			TableID:   2,
-			Name:      "Alex",
-			CodeOrder: "ORD002",
-			// Amount:          245.50,
-			PaymentMethodID: 2,
-			Status:          "Completed",
-		},
-		{
-			ID:        3,
-			TableID:   3,
-			Name:      "Elia",
-			CodeOrder: "ORD003",
-			// Amount:          89.99,
-			PaymentMethodID: 3,
-			Status:          "Cancelled",
-		},
-		{
-			ID:        4,
-			TableID:   4,
-			Name:      "Smith",
-			CodeOrder: "ORD004",
-			// Amount:          175.25,
+			ID:              4,
+			TableID:         4,
+			Name:            "Smith",
+			CodeOrder:       "ORD004",
+			Tax:             10.0,
 			PaymentMethodID: 2,
 			Status:          "In Process",
+			OrderItems: []OrderItem{
+				{
+					ProductID: 5,
+					Quantity:  5,
+					Status: "Cooking Now",
+				},
+				{
+					ProductID: 17,
+					Quantity:  5,
+					Status: "Cooking Now",
+				},
+				{
+					ProductID: 2,
+					Quantity:  5,
+					Status: "Cooking Now",
+				},
+			},
 		},
 		{
-			ID:        5,
-			TableID:   5,
-			Name:      "Bob Brown",
-			CodeOrder: "ORD005",
-			// Amount:          320.80,
+			ID:              5,
+			TableID:         5,
+			Name:            "Bob Brown",
+			CodeOrder:       "ORD005",
+			Tax:             10.0,
 			PaymentMethodID: 1,
 			Status:          "Completed",
+			OrderItems: []OrderItem{
+				{
+					ProductID: 5,
+					Quantity:  5,
+					Status: "Cooking Now",
+				},
+			},
 		},
 	}
+
 }
 
-func OrderItemsSeed() []OrderItem {
-	return []OrderItem{
-		{
-			OrderID:   1,
-			ProductID: 1,
-			Quantity:  2,
-			// SubTotal:  300.50,
-			Status: "In The Kitchen",
-		},
-		{
-			OrderID:   1,
-			ProductID: 2,
-			Quantity:  1,
-			// SubTotal:  150.25,
-			Status: "Cooking Now",
-		},
-		{
-			OrderID:   2,
-			ProductID: 3,
-			Quantity:  3,
-			// SubTotal:  450.75,
-			Status: "Ready To Serve",
-		},
-		{
-			OrderID:   3,
-			ProductID: 4,
-			Quantity:  1,
-			// SubTotal:  89.99,
-			Status: "In The Kitchen",
-		},
-		{
-			OrderID:   4,
-			ProductID: 5,
-			Quantity:  5,
-			// SubTotal:  875.00,
-			Status: "Cooking Now",
-		},
-	}
-}
