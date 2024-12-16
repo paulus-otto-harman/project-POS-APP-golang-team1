@@ -53,7 +53,22 @@ func NewRoutes(ctx infra.ServiceContext) {
 		reservationsRoutes.PUT("/:id", ctx.Ctl.ReservationHandler.Update)
 	}
 
+	categoriesRoutes := r.Group("/categories")
+	{
+		categoriesRoutes.GET("/", ctx.Ctl.CategoryHandler.All)
+		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
+		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
+	}
+  
+	productsRoutes := r.Group("/products")
+	{
+		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
+	}
+
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	notificationRoutes(ctx, r)
 
 	gracefulShutdown(ctx, r.Handler())
 }

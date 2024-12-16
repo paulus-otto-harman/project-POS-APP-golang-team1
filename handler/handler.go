@@ -13,6 +13,8 @@ type Handler struct {
 	PasswordResetHandler PasswordResetController
 	UserHandler          UserController
 	ReservationHandler   ReservationController
+	NotificationHandler  NotificationController
+	CategoryHandler      CategoryController
 }
 
 func NewHandler(service service.Service, logger *zap.Logger) *Handler {
@@ -21,6 +23,8 @@ func NewHandler(service service.Service, logger *zap.Logger) *Handler {
 		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
 		UserHandler:          *NewUserController(service.User, logger),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
+		NotificationHandler:  *NewNotificationController(service, logger),
+		CategoryHandler:      *NewCategoryController(service.Category, logger),
 	}
 }
 
