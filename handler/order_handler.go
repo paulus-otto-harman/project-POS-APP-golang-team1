@@ -48,6 +48,30 @@ func (ctrl *OrderController) AllTables(c *gin.Context) {
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), tables)
 }
 
+// @Summary Get All Payments
+// @Description Retrieve a list of payments
+// @Tags Payments
+// @Accept  json
+// @Produce json
+// @Success 200 {object} Response{data=[]domain.PaymentMethod} "fetch success"
+// @Failure 404 {object} Response "payments not found"
+// @Failure 500 {object} Response "internal server error"
+// @Router /payments/ [get]
+func (ctrl *OrderController) AllPayments(c *gin.Context) {
+
+	payments, err := ctrl.service.AllPayments()
+	if err != nil {
+		if err.Error() == "payments not found" {
+			BadResponse(c, err.Error(), http.StatusNotFound)
+			return
+		}
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "fetch success", http.StatusOK, payments)
+}
+
 // @Summary Create Category
 // @Description Create a new category with an icon
 // @Tags Categories
@@ -81,8 +105,6 @@ func (ctrl *OrderController) Create(c *gin.Context) {
 // @Failure 500 {object} Response "internal server error"
 // @Router /categories/{id} [put]
 func (ctrl *OrderController) Update(c *gin.Context) {
-
-	
 
 	GoodResponseWithData(c, "update success", http.StatusOK, nil)
 }

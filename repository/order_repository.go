@@ -61,6 +61,23 @@ func (repo OrderRepository) AllTables(page, limit int) ([]*domain.Table, int64, 
 
 	return tables, totalItems, nil
 }
+func (repo OrderRepository) AllPayments() ([]*domain.PaymentMethod, error) {
+	var payments []*domain.PaymentMethod
+
+	err := repo.db.Model(&domain.PaymentMethod{}).Where("status = ?", true).
+		Find(&payments).Error
+	if err != nil {
+		repo.log.Error("Failed to fetch payments", zap.Error(err))
+		return nil, err
+	}
+
+	if len(payments) == 0 {
+		repo.log.Warn("No payments found")
+		return nil, errors.New("no payments found")
+	}
+
+	return payments, nil
+}
 
 func (repo *OrderRepository) FindByID(Order *domain.Order, id string) error {
 	if err := repo.db.First(Order, "id = ?", id).Error; err != nil {

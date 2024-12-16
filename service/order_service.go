@@ -10,6 +10,7 @@ import (
 
 type OrderService interface {
 	AllTables(page, limit int) ([]*domain.Table, int64, error)
+	AllPayments() ([]*domain.PaymentMethod, error)
 	Create(order *domain.Order) error
 	FindByID(order *domain.Order, id string) error
 	Update(order *domain.Order) error
@@ -35,6 +36,17 @@ func (s *orderService) AllTables(page, limit int) ([]*domain.Table, int64, error
 	}
 
 	return tables, int64(totalItems), nil
+}
+func (s *orderService) AllPayments() ([]*domain.PaymentMethod, error) {
+	payments, err := s.repo.AllPayments()
+	if len(payments) == 0 {
+		return nil, errors.New("payments not found")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return payments, nil
 }
 func (s *orderService) Create(order *domain.Order) error {
 	if order.Name == "" {

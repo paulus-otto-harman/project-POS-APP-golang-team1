@@ -51,7 +51,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
 		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
 	}
-	
+
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
@@ -60,6 +60,10 @@ func NewRoutes(ctx infra.ServiceContext) {
 	tablesRoutes := r.Group("/tables")
 	{
 		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
+	}
+	paymentsRoutes := r.Group("/payments")
+	{
+		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
 	}
 
 
