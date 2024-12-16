@@ -4,7 +4,6 @@ import (
 	"errors"
 	"project/domain"
 	"project/repository"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -54,9 +53,9 @@ func (s *reservationService) Add(reservationRequest *domain.Reservation) error {
 	}
 
 	// Validasi Reservation Date & Time (tidak boleh masa lalu)
-	if reservationRequest.ReservationDate.Before(time.Now()) || (reservationRequest.ReservationDate.Equal(time.Now()) && reservationRequest.ReservationTime.Before(time.Now().Local().Truncate(time.Minute))) {
-		return errors.New("reservation date and time cannot be in the past")
-	}
+	// if reservationRequest.ReservationDate.Before(time.Now()) || (reservationRequest.ReservationDate.Equal(time.Now()) && reservationRequest.ReservationTime.Before(time.Now().Local().Truncate(time.Minute))) {
+	// 	return errors.New("reservation date and time cannot be in the past")
+	// }
 
 	// Memanggil fungsi repository untuk menambah reservasi
 	err := s.repo.Add(reservationRequest)
@@ -82,7 +81,7 @@ func (s *reservationService) GetReservationByID(id uint) (*domain.Reservation, e
 func (s *reservationService) Update(reservationID uint, updates map[string]interface{}) error {
 	// Validasi input updates
 	if len(updates) == 0 {
-		return errors.New("table number cannot 0")
+		return errors.New("only table number and status can edit")
 	}
 
 	// Validasi data sebelum mengirim ke repository

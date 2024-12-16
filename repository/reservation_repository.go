@@ -36,17 +36,17 @@ func (repo *ReservationRepository) Add(reservation *domain.Reservation) error {
 	}
 
 	// Validasi Reservation Date & Time (tidak boleh masa lalu)
-	if reservation.ReservationDate.Before(time.Now()) || (reservation.ReservationDate.Equal(time.Now()) && reservation.ReservationTime.Before(time.Now().Local().Truncate(time.Minute))) {
-		return errors.New("reservation date and time cannot be in the past")
-	}
+	// if reservation.ReservationDate.Before(time.Now()) || (reservation.ReservationDate.Equal(time.Now()) && reservation.ReservationTime.Before(time.Now().Local().Truncate(time.Minute))) {
+	// 	return errors.New("reservation date and time cannot be in the past")
+	// }
 
 	// Validasi Table Number (tidak boleh ada reservasi lain di waktu yang sama)
 	var existingReservation domain.Reservation
 	err := repo.db.Where("reservation_date = ? AND reservation_time = ? AND table_number = ?", reservation.ReservationDate, reservation.ReservationTime, reservation.TableNumber).
-		First(&existingReservation).Error
+		Find(&existingReservation).Error
 
-	if err == nil && existingReservation.Status != "Canceled" {
-		// Jika ada reservasi dengan status selain 'Canceled', blokir reservasi baru
+	if err == nil && existingReservation.Status == "Confirmed" {
+		// Jika ada reservasi dengan status  'Confirmed', blokir reservasi baru
 		return errors.New("this table is already reserved at the selected time")
 	}
 
