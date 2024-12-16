@@ -9,19 +9,20 @@ import (
 )
 
 type Order struct {
-	ID              uint          `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	TableID         uint          `gorm:"not null" json:"table_id" binding:"required" form:"table_id" example:"1"`
-	Table           Table         `gorm:"foreignKey:TableID;references:ID"`
-	Name            string        `gorm:"size:100" json:"name" form:"name"`
-	CodeOrder       string        `gorm:"size:50;unique" json:"code_order"`
-	Tax             float64       `gorm:"type:decimal(4,2);not null;default:10.0" json:"tax"`
-	Amount          float64       `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"amount" form:"amount" example:"699.99"`
-	PaymentMethodID uint          `gorm:"not null" json:"payment_method_id" binding:"required" form:"payment_method_id" example:"1"`
-	PaymentMethod   PaymentMethod `gorm:"foreignKey:PaymentMethodID;references:ID"`
-	Status          string        `gorm:"size:20;check:status IN ('In Process', 'Completed', 'Cancelled');default:In Process" json:"status" example:"In Process"`
-	CreatedAt       time.Time     `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
-	UpdatedAt       time.Time     `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
-	OrderItems      []OrderItem   `gorm:"foreignKey:OrderID;references:ID"`
+	ID              uint           `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	TableID         uint           `gorm:"not null" json:"table_id" binding:"required" form:"table_id" example:"1"`
+	Table           Table          `gorm:"foreignKey:TableID;references:ID"`
+	Name            string         `gorm:"size:100" json:"name" form:"name"`
+	CodeOrder       string         `gorm:"size:50;unique" json:"code_order"`
+	Tax             float64        `gorm:"type:decimal(4,2);not null;default:10.0" json:"tax"`
+	Amount          float64        `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"amount" form:"amount" example:"699.99"`
+	PaymentMethodID uint           `gorm:"not null" json:"payment_method_id" binding:"required" form:"payment_method_id" example:"1"`
+	PaymentMethod   PaymentMethod  `gorm:"foreignKey:PaymentMethodID;references:ID"`
+	Status          string         `gorm:"size:20;check:status IN ('In Process', 'Completed', 'Cancelled');default:In Process" json:"status" example:"In Process"`
+	OrderItems      []OrderItem    `gorm:"foreignKey:OrderID;references:ID"`
+	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
+	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-" swaggerignore:"true"`
 }
 
 func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
@@ -81,12 +82,12 @@ func OrderSeed() []Order {
 				{
 					ProductID: 1,
 					Quantity:  2,
-					Status: "In The Kitchen",
+					Status:    "In The Kitchen",
 				},
 				{
 					ProductID: 2,
 					Quantity:  1,
-					Status: "Cooking Now",
+					Status:    "Cooking Now",
 				},
 			},
 		},
@@ -102,17 +103,17 @@ func OrderSeed() []Order {
 				{
 					ProductID: 3,
 					Quantity:  3,
-					Status: "Ready To Serve",
+					Status:    "Ready To Serve",
 				},
 				{
 					ProductID: 12,
 					Quantity:  3,
-					Status: "Ready To Serve",
+					Status:    "Ready To Serve",
 				},
 				{
 					ProductID: 6,
 					Quantity:  3,
-					Status: "Ready To Serve",
+					Status:    "Ready To Serve",
 				},
 			},
 		},
@@ -128,12 +129,12 @@ func OrderSeed() []Order {
 				{
 					ProductID: 4,
 					Quantity:  1,
-					Status: "In The Kitchen",
+					Status:    "In The Kitchen",
 				},
 				{
 					ProductID: 15,
 					Quantity:  1,
-					Status: "In The Kitchen",
+					Status:    "In The Kitchen",
 				},
 			},
 		},
@@ -149,17 +150,17 @@ func OrderSeed() []Order {
 				{
 					ProductID: 5,
 					Quantity:  5,
-					Status: "Cooking Now",
+					Status:    "Cooking Now",
 				},
 				{
 					ProductID: 17,
 					Quantity:  5,
-					Status: "Cooking Now",
+					Status:    "Cooking Now",
 				},
 				{
 					ProductID: 2,
 					Quantity:  5,
-					Status: "Cooking Now",
+					Status:    "Cooking Now",
 				},
 			},
 		},
@@ -175,11 +176,10 @@ func OrderSeed() []Order {
 				{
 					ProductID: 5,
 					Quantity:  5,
-					Status: "Cooking Now",
+					Status:    "Cooking Now",
 				},
 			},
 		},
 	}
 
 }
-
