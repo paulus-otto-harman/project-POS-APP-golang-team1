@@ -163,7 +163,6 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 		ctrl.logger.Info("Received new file", zap.String("filename", filename))
 	}
 
-	
 	if err := c.ShouldBind(&category); err != nil {
 		ctrl.logger.Error("Invalid input", zap.Error(err))
 		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)

@@ -13,6 +13,7 @@ type Service struct {
 	Reservation   ReservationService
 	Notification  NotificationService
 	Category      CategoryService
+	Inventory     InventoryService
 }
 
 func NewService(repo repository.Repository, log *zap.Logger) Service {
@@ -23,5 +24,6 @@ func NewService(repo repository.Repository, log *zap.Logger) Service {
 		Notification:  NewNotificationService(repo, log),
 		Reservation:   NewReservationService(repo.Reservation, log),
 		Category:      NewCategoryService(repo.Category, log),
+		Inventory:     NewInventoryService(repo.Inventory, log),
 	}
 }

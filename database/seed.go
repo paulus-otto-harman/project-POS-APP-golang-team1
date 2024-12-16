@@ -32,5 +32,6 @@ func dataSeeds() []interface{} {
 		domain.NotificationSeed(),
 		domain.CategorySeed(),
 		domain.ProductSeed(),
+		domain.InventorySeed(),
 	}
 }

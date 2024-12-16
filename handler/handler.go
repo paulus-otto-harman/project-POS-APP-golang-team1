@@ -15,6 +15,7 @@ type Handler struct {
 	ReservationHandler   ReservationController
 	NotificationHandler  NotificationController
 	CategoryHandler      CategoryController
+	InventoryHandler     InventoryController
 }
 
 func NewHandler(service service.Service, logger *zap.Logger) *Handler {
@@ -25,6 +26,7 @@ func NewHandler(service service.Service, logger *zap.Logger) *Handler {
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),
+		InventoryHandler:     *NewInventoryController(service.Inventory, logger),
 	}
 }
 

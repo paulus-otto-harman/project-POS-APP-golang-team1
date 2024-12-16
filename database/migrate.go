@@ -31,6 +31,7 @@ func autoMigrates(db *gorm.DB) error {
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.Inventory{},
 	)
 }
 

@@ -59,12 +59,16 @@ func NewRoutes(ctx infra.ServiceContext) {
 		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
 		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
 	}
-  
+
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
 	}
 
+	inventoryRoutes := r.Group("/inventory")
+	{
+		inventoryRoutes.GET("/", ctx.Ctl.InventoryHandler.All)
+	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

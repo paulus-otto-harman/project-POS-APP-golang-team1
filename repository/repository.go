@@ -9,14 +9,14 @@ import (
 )
 
 type Repository struct {
-	Auth          AuthRepository
-	PasswordReset PasswordResetRepository
-	User          UserRepository
-	Reservation   ReservationRepository
-	Notification  NotificationRepository
-	Category      CategoryRepository
+	Auth             AuthRepository
+	PasswordReset    PasswordResetRepository
+	User             UserRepository
+	Reservation      ReservationRepository
+	Notification     NotificationRepository
+	Category         CategoryRepository
 	UserNotification UserNotificationRepository
-	
+	Inventory        InventoryRepository
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -24,9 +24,10 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Auth:             *NewAuthRepository(db, cacher, log),
 		PasswordReset:    *NewPasswordResetRepository(db, log),
 		User:             *NewUserRepository(db, log),
-    Reservation:      *NewReservationRepository(db, log),
+		Reservation:      *NewReservationRepository(db, log),
 		Notification:     *NewNotificationRepository(db, log),
 		Category:         *NewCategoryRepository(db, log),
 		UserNotification: *NewUserNotificationRepository(db, log),
+		Inventory:        *NewInventoryRepository(db, log),
 	}
 }
