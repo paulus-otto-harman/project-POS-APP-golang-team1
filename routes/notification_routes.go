@@ -10,9 +10,9 @@ func notificationRoutes(ctx infra.ServiceContext, r *gin.Engine) {
 	notifHandler := ctx.Ctl.NotificationHandler
 	notifGroup := r.Group("/notifications")
 
-	notifGroup.GET("/", notifHandler.GetNotifications)
-	notifGroup.PUT("/:id", notifHandler.UpdateNotificationStatus)
-	notifGroup.PUT("/batch", notifHandler.BatchUpdateNotificationStatus)
-	notifGroup.DELETE("/:id", notifHandler.DeleteNotification)
+	notifGroup.GET("/:user_id", notifHandler.All)
+	notifGroup.PUT("/:id", notifHandler.Update)
+	notifGroup.PUT("/batch", notifHandler.BatchUpdate)
+	notifGroup.DELETE("/:id", notifHandler.Delete)
 	notifGroup.POST("/low-stock", notifHandler.SendNotificationLowStock)
 }

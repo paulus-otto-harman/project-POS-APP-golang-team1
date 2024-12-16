@@ -23,11 +23,12 @@ func SeedAll(db *gorm.DB) error {
 		}
 		return nil
 	})
-
 }
 
 func dataSeeds() []interface{} {
 	return []interface{}{
+		// domain.NotificationSeed(),
+		domain.ReservationSeed(),
 		domain.NotificationSeed(),
 		domain.CategorySeed(),
 		domain.ProductSeed(),

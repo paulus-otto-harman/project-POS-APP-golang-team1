@@ -13,6 +13,7 @@ type Handler struct {
 	AuthHandler          AuthController
 	PasswordResetHandler PasswordResetController
 	UserHandler          UserController
+	ReservationHandler   ReservationController
 	NotificationHandler  NotificationController
 	CategoryHandler      CategoryController
 }
@@ -22,6 +23,7 @@ func NewHandler(service service.Service, logger *zap.Logger, jwt jwt.JWT) *Handl
 		AuthHandler:          *NewAuthController(service.Auth, logger, jwt),
 		PasswordResetHandler: *NewPasswordResetController(service, logger),
 		UserHandler:          *NewUserController(service.User, logger),
+		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),
 	}

@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserRole string
@@ -25,4 +26,5 @@ type User struct {
 	Profile             Profile              `json:"profile"`
 	Permissions         []Permission         `gorm:"many2many:user_permissions;" json:"permissions"`
 	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:Email;references:Email" json:"-"`
+	Notifications       []Notification       `gorm:"many2many:user_notifications" json:"user_notifications"` // Reference the join table
 }

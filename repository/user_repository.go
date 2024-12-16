@@ -34,3 +34,12 @@ func (repo UserRepository) Get(criteria domain.User) (*domain.User, error) {
 	err := repo.db.Where(criteria).First(&user).Error
 	return &user, err
 }
+
+func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
+	var users []domain.User
+	result := repo.db.Where("role =?", role).Find(&users)
+	if result.RowsAffected == 0 {
+		return nil, errors.New("users not found")
+	}
+	return users, nil
+}

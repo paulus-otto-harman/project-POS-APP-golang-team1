@@ -3,10 +3,11 @@ package database
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"log"
 	"project/config"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type Cacher struct {
