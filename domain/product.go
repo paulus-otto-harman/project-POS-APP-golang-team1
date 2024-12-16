@@ -8,8 +8,8 @@ import (
 
 type Product struct {
 	ID           uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	CategoryID   int       `gorm:"not null" json:"-" binding:"required,gt=0" form:"category_id" example:"1"`
-	Category     Category  `gorm:"foreignKey:CategoryID;references:ID" swaggerignore:"true"`
+	CategoryID   uint      `gorm:"not null" json:"-" binding:"required,gt=0" form:"category_id" example:"1"`
+	Category     Category  `gorm:"foreignKey:CategoryID;references:ID"`
 	Image        string    `gorm:"size:255;not null" json:"image" binding:"omitempty" example:"/image/product.png"`
 	Name         string    `gorm:"size:100;unique" json:"name" form:"name"`
 	CodeProduct  string    `gorm:"size:50;unique" json:"code_product" form:"code_product"`

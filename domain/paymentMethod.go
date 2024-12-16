@@ -1,0 +1,27 @@
+package domain
+
+import (
+	"time"
+)
+
+type PaymentMethod struct {
+	ID        uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	Name      string    `gorm:"size:50;unique" json:"name" binding:"required" example:"Credit Card"`
+	Status    bool      `gorm:"type:boolean;default:true" json:"status" example:"true"` // Active or inactive
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+}
+
+func PaymentMethodSeed() []PaymentMethod {
+	return []PaymentMethod{
+		{
+			Name: "Cash",
+		},
+		{
+			Name: "Credit Card",
+		},
+		{
+			Name: "E-Wallet",
+		},
+	}
+}

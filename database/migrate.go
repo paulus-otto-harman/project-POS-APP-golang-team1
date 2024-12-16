@@ -29,6 +29,11 @@ func autoMigrates(db *gorm.DB) error {
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.Table{},
+		&domain.PaymentMethod{},
+		&domain.Order{},
+		&domain.OrderItem{},
+
 	)
 }
 
@@ -38,6 +43,10 @@ func dropTables(db *gorm.DB) error {
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.Table{},
+		&domain.PaymentMethod{},
+		&domain.Order{},
+		&domain.OrderItem{},
 	)
 }
 
