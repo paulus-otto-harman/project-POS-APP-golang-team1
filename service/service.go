@@ -19,7 +19,7 @@ func NewService(repo repository.Repository, log *zap.Logger) Service {
 		Auth:          NewAuthService(repo.Auth, log),
 		PasswordReset: NewPasswordResetService(repo.PasswordReset, log),
 		User:          NewUserService(repo.User, log),
-		Notification:  NewNotificationService(repo.Notification, log),
+		Notification:  NewNotificationService(repo, log),
 		Category:      NewCategoryService(repo.Category, log),
 	}
 }

@@ -1,8 +1,9 @@
 package database
 
 import (
-	"gorm.io/gorm"
 	"project/domain"
+
+	"gorm.io/gorm"
 )
 
 func Migrate(db *gorm.DB) error {
@@ -38,13 +39,16 @@ func dropTables(db *gorm.DB) error {
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.UserNotification{},
 	)
 }
 
 func setupJoinTables(db *gorm.DB) error {
-	var err error
-
-	return err
+	err := db.SetupJoinTable(&domain.User{}, "Notifications", &domain.UserNotification{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func createViews(db *gorm.DB) error {

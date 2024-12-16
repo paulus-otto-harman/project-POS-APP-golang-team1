@@ -2,9 +2,10 @@ package repository
 
 import (
 	"errors"
+	"project/domain"
+
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"project/domain"
 )
 
 type UserRepository struct {
@@ -25,6 +26,15 @@ func (repo UserRepository) All(user domain.User) ([]domain.User, error) {
 	result := repo.db.Where(user).Find(&users)
 	if result.RowsAffected == 0 {
 		return nil, errors.New("user not found")
+	}
+	return users, nil
+}
+
+func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
+	var users []domain.User
+	result := repo.db.Where("role =?", role).Find(&users)
+	if result.RowsAffected == 0 {
+		return nil, errors.New("users not found")
 	}
 	return users, nil
 }
