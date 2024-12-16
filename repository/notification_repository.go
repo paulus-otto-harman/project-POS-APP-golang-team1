@@ -16,26 +16,38 @@ func NewNotificationRepository(db *gorm.DB, log *zap.Logger) *NotificationReposi
 	return &NotificationRepository{db: db, log: log}
 }
 
-func (repo NotificationRepository) Create(notification domain.Notification) error {
+func (repo NotificationRepository) Create(notification *domain.Notification) error {
+	// Start a transaction to create the notification
 	return repo.db.Transaction(func(tx *gorm.DB) error {
+		// Create the notification record in the database
 		if err := tx.Create(&notification).Error; err != nil {
 			repo.log.Error("Error creating notification", zap.Error(err))
 			return err
 		}
+		// Return nil to indicate success
 		return nil
 	})
 }
 
-func (repo NotificationRepository) GetAll(status string) ([]domain.Notification, error) {
+func (repo NotificationRepository) All(userID uint, status string) ([]domain.Notification, error) {
 	var notifications []domain.Notification
 	query := repo.db
+
+	// Join the `user_notifications` table to filter notifications based on the user
+	query = query.Joins("JOIN user_notifications ON user_notifications.notification_id = notifications.id").
+		Where("user_notifications.user_id = ?", userID)
+
+	// Optionally filter by status
 	if status != "" {
-		query = query.Where("status = ?", status)
+		query = query.Where("user_notifications.status = ?", status)
 	}
+
+	// Fetch the notifications
 	if err := query.Find(&notifications).Error; err != nil {
 		repo.log.Error("Error fetching notifications", zap.Error(err))
 		return nil, err
 	}
+
 	return notifications, nil
 }
 

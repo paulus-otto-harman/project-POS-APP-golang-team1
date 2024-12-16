@@ -21,15 +21,26 @@ func NewNotificationController(service service.Service, logger *zap.Logger) *Not
 
 // GetNotifications godoc
 // @Summary      Get notifications
-// @Description  Fetch all notifications filtered by status
+// @Description  Fetch all notifications filtered by status and user ID
 // @Tags         Notifications
-// @Param        status  query  string  false  "Notification status filter"
-// @Success      200     {object}  []domain.Notification
-// @Failure      404     {object}  Response
-// @Router       /notifications [get]
-func (ctrl *NotificationController) GetNotifications(c *gin.Context) {
+// @Param        user_id  path    int     true   "User ID"
+// @Param        status   query   string  false  "Notification status filter"
+// @Success      200      {object}  []domain.Notification
+// @Failure      400      {object}  Response "Invalid user ID"
+// @Failure      404      {object}  Response "Notifications not found"
+// @Router       /notifications/{user_id} [get]
+func (ctrl *NotificationController) All(c *gin.Context) {
 	status := c.Query("status")
-	notification, err := ctrl.service.Notification.GetAllNotifications(status)
+
+	user_id := c.Param("user_id")
+	userID, err := helper.Uint(user_id)
+	if err != nil {
+		ctrl.logger.Error("Invalid notification ID", zap.Error(err))
+		BadResponse(c, "Invalid notification ID", http.StatusBadRequest)
+		return
+	}
+
+	notification, err := ctrl.service.Notification.All(userID, status)
 	if err != nil {
 		ctrl.logger.Error("failed to get notifications", zap.Error(err))
 		BadResponse(c, err.Error(), http.StatusNotFound)
@@ -62,7 +73,7 @@ func (ctrl *NotificationController) SendNotificationLowStock(c *gin.Context) {
 	GoodResponseWithData(c, "Low stock notification sent", http.StatusOK, nil)
 }
 
-// UpdateNotificationStatus godoc
+// Update godoc
 // @Summary      Update notification status
 // @Description  Update the status of a single notification
 // @Tags         Notifications
@@ -72,7 +83,7 @@ func (ctrl *NotificationController) SendNotificationLowStock(c *gin.Context) {
 // @Failure      400     {object}  Response
 // @Failure      500     {object}  Response
 // @Router       /notifications/{id} [put]
-func (ctrl *NotificationController) UpdateNotificationStatus(c *gin.Context) {
+func (ctrl *NotificationController) Update(c *gin.Context) {
 	// Parse notification ID from path parameters
 	id := c.Param("id")
 	notifID, err := helper.Uint(id)
@@ -91,7 +102,7 @@ func (ctrl *NotificationController) UpdateNotificationStatus(c *gin.Context) {
 	}
 
 	// Call the service to update the notification
-	err = ctrl.service.Notification.UpdateNotification(notifID, req.Status)
+	err = ctrl.service.Notification.Update(notifID, req.Status)
 	if err != nil {
 		ctrl.logger.Error("Failed to update notification status", zap.Error(err))
 		BadResponse(c, "Failed to update notification", http.StatusInternalServerError)
@@ -101,7 +112,7 @@ func (ctrl *NotificationController) UpdateNotificationStatus(c *gin.Context) {
 	GoodResponseWithData(c, "Notification status updated successfully", http.StatusOK, nil)
 }
 
-// DeleteNotification godoc
+// Delete godoc
 // @Summary      Delete notification
 // @Description  Delete a notification by ID
 // @Tags         Notifications
@@ -110,14 +121,14 @@ func (ctrl *NotificationController) UpdateNotificationStatus(c *gin.Context) {
 // @Failure      400  {object}  Response
 // @Failure      500  {object}  Response
 // @Router       /notifications/{id} [delete]
-func (ctrl *NotificationController) DeleteNotification(c *gin.Context) {
+func (ctrl *NotificationController) Delete(c *gin.Context) {
 	id := c.Param("id")
 	notifID, err := helper.Uint(id)
 	if err != nil {
 		ctrl.logger.Error("failed to parse notification id", zap.Error(err))
 		BadResponse(c, err.Error(), http.StatusBadRequest)
 	}
-	err = ctrl.service.Notification.DeleteNotification(notifID)
+	err = ctrl.service.Notification.Delete(notifID)
 	if err != nil {
 		ctrl.logger.Error("failed to delete notification", zap.Error(err))
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
@@ -126,7 +137,7 @@ func (ctrl *NotificationController) DeleteNotification(c *gin.Context) {
 	GoodResponseWithData(c, "Notification deleted", http.StatusOK, nil)
 }
 
-// BatchUpdateNotificationStatus godoc
+// BatchUpdate godoc
 // @Summary      Batch update notification statuses
 // @Description  Update statuses for multiple notifications
 // @Tags         Notifications
@@ -135,7 +146,7 @@ func (ctrl *NotificationController) DeleteNotification(c *gin.Context) {
 // @Failure      400  {object}  Response
 // @Failure      500  {object}  Response
 // @Router       /notifications/batch [put]
-func (ctrl *NotificationController) BatchUpdateNotificationStatus(c *gin.Context) {
+func (ctrl *NotificationController) BatchUpdate(c *gin.Context) {
 	var req domain.BatchUpdateNotifRequest
 	// Parse the JSON request body
 	if err := c.BindJSON(&req); err != nil {
@@ -151,7 +162,7 @@ func (ctrl *NotificationController) BatchUpdateNotificationStatus(c *gin.Context
 	}
 
 	// Call the service to perform the batch update
-	err := ctrl.service.Notification.BatchUpdateNotifications(req.NotificationIDs, req.Status)
+	err := ctrl.service.Notification.BatchUpdate(req.NotificationIDs, req.Status)
 	if err != nil {
 		ctrl.logger.Error("failed to batch update notification statuses", zap.Error(err))
 		BadResponse(c, "Failed to update notifications", http.StatusInternalServerError)
