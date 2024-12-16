@@ -65,6 +65,10 @@ func NewRoutes(ctx infra.ServiceContext) {
 	{
 		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
 	}
+	ordersRoutes := r.Group("/orders")
+	{
+		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
+	}
 
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

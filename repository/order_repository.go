@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	// "math"
 	"project/domain"
 
 	"go.uber.org/zap"
@@ -98,35 +99,45 @@ func (repo *OrderRepository) Update(Order *domain.Order) error {
 	return nil
 }
 
-func (repo OrderRepository) AllOrders(page, limit int, OrderID string) ([]*domain.Order, int64, error) {
-	var Orders []*domain.Order
+func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error) {
+	var orders []*domain.Order
 	var totalItems int64
 
 	query := repo.db.Model(&domain.Order{})
-	if OrderID != "" {
-		query = query.Where("Order_id = ?", OrderID)
+	if name != "" {
+		query = query.Where("name ILIKE ?", name+"%")
+	}
+	if codeOrder != "" {
+		query = query.Where("code_order = ?", codeOrder)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
-		repo.log.Error("Failed to count total Orders", zap.Error(err))
+		repo.log.Error("Failed to count total orders", zap.Error(err))
 		return nil, 0, err
 	}
 
 	if totalItems == 0 {
-		repo.log.Warn("No Orders found")
-		return []*domain.Order{}, 0, nil
+		repo.log.Warn("No orders found")
+		return nil, 0, nil
 	}
 
-	err := query.Preload("Order", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, name, created_at, updated_at")
-	}).
+	err := query.Preload("Table", func(db *gorm.DB) *gorm.DB { return db.Select("id, name") }).
+		Preload("PaymentMethod", func(db *gorm.DB) *gorm.DB { return db.Select("id, name") }).
+		Preload("OrderItems", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Product", func(db *gorm.DB) *gorm.DB {
+				return db.Select("id, name, price")
+			}).Select("id, order_id, product_id, quantity, sub_total, status")
+		}).
 		Offset((page - 1) * limit).
 		Limit(limit).
-		Find(&Orders).Error
+		Find(&orders).Error
 	if err != nil {
-		repo.log.Error("Failed to fetch Orders", zap.Error(err))
+		repo.log.Error("Failed to fetch orders", zap.Error(err))
 		return nil, 0, err
 	}
 
-	return Orders, totalItems, nil
+	return orders, totalItems, nil
 }

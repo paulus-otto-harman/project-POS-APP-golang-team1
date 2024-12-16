@@ -14,7 +14,7 @@ type OrderService interface {
 	Create(order *domain.Order) error
 	FindByID(order *domain.Order, id string) error
 	Update(order *domain.Order) error
-	AllOrders(page, limit int, orderID string) ([]*domain.Order, int64, error)
+	AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error)
 }
 
 type orderService struct {
@@ -75,9 +75,8 @@ func (s *orderService) Update(order *domain.Order) error {
 	}
 	return nil
 }
-func (s *orderService) AllOrders(page, limit int, orderID string) ([]*domain.Order, int64, error) {
-
-	orders, totalItems, err := s.repo.AllOrders(page, limit, orderID)
+func (s *orderService) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error) {
+	orders, totalItems, err := s.repo.AllOrders(page, limit, name, codeOrder, status)
 	if err != nil {
 		return nil, 0, err
 	}

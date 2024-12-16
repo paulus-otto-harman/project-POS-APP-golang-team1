@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"math"
 	"net/http"
+	"project/domain"
 	"project/helper"
 	"project/service"
 
@@ -109,24 +111,28 @@ func (ctrl *OrderController) Update(c *gin.Context) {
 	GoodResponseWithData(c, "update success", http.StatusOK, nil)
 }
 
-// @Summary Get All Products
-// @Description Retrieve a list of orders with pagination
+// @Summary Get All Orders
+// @Description Retrieve a list of orders with pagination and filters
 // @Tags Orders
-// @Accept  json
+// @Accept json
 // @Produce json
 // @Param page query int false "Page number, default is 1"
 // @Param limit query int false "Number of items per page, default is 10"
-// @Param category_id query string false "Order ID to filter products"
-// @Success 200 {object} domain.DataPage{data=[]domain.Order} "fetch success"
-// @Failure 404 {object} Response "Order not found"
-// @Failure 500 {object} Response "internal server error"
-// @Router /products/ [get]
+// @Param name query string false "Filter by customer name"
+// @Param code_order query string false "Filter by order code"
+// @Param status query string false "Filter by order status"
+// @Success 200 {object} domain.DataPage{data=[]domain.OrderResponse} "fetch success"
+// @Failure 404 {object} Response "Orders not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /orders [get]
 func (ctrl *OrderController) AllOrders(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
 	limit, _ := helper.Uint(c.DefaultQuery("limit", "10"))
-	orderID := c.Query("order_id")
+	name := c.Query("name")
+	codeOrder := c.Query("code_order")
+	status := c.Query("status")
 
-	orders, totalItems, err := ctrl.service.AllOrders(int(page), int(limit), orderID)
+	orders, totalItems, err := ctrl.service.AllOrders(int(page), int(limit), name, codeOrder, status)
 	if err != nil {
 		if err.Error() == "orders not found" {
 			BadResponse(c, err.Error(), http.StatusNotFound)
@@ -138,5 +144,33 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 
 	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
 
-	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), orders)
+	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), ctrl.formatOrderResponse(orders))
+}
+
+func (ctrl *OrderController) formatOrderResponse(orders []*domain.Order) []*domain.OrderResponse {
+	response := make([]*domain.OrderResponse, len(orders))
+	for i, order := range orders {
+		totalSubTotal := 0.0
+		orderItems := make([]*domain.OrderItemResponse, len(order.OrderItems))
+		for j, item := range order.OrderItems {
+			orderItems[j] = &domain.OrderItemResponse{
+				ProductName: item.Product.Name,
+				Quantity:    item.Quantity,
+				SubTotal:    item.SubTotal,
+				Status:      item.Status,
+			}
+			totalSubTotal += item.SubTotal
+		}
+		response[i] = &domain.OrderResponse{
+			Name:          order.Name,
+			CodeOrder:     order.CodeOrder,
+			Status:        order.Status,
+			OrderDate:     order.CreatedAt.Format("2006-01-02"),
+			OrderTime:     order.CreatedAt.Format("15:04:05"),
+			TableName:     order.Table.Name,
+			OrderItems:    orderItems,
+			TotalSubTotal: math.Round(totalSubTotal*100) / 100,
+		}
+	}
+	return response
 }

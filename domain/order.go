@@ -10,13 +10,13 @@ import (
 
 type Order struct {
 	ID              uint           `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	TableID         uint           `gorm:"not null" json:"table_id" binding:"required" form:"table_id" example:"1"`
+	TableID         uint           `gorm:"not null" json:"-" binding:"required" form:"table_id" example:"1"`
 	Table           Table          `gorm:"foreignKey:TableID;references:ID"`
 	Name            string         `gorm:"size:100" json:"name" form:"name"`
 	CodeOrder       string         `gorm:"size:50;unique" json:"code_order"`
 	Tax             float64        `gorm:"type:decimal(4,2);not null;default:10.0" json:"tax"`
 	Amount          float64        `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"amount" form:"amount" example:"699.99"`
-	PaymentMethodID uint           `gorm:"not null" json:"payment_method_id" binding:"required" form:"payment_method_id" example:"1"`
+	PaymentMethodID uint           `gorm:"not null" json:"-" binding:"required" form:"payment_method_id" example:"1"`
 	PaymentMethod   PaymentMethod  `gorm:"foreignKey:PaymentMethodID;references:ID"`
 	Status          string         `gorm:"size:20;check:status IN ('In Process', 'Completed', 'Cancelled');default:In Process" json:"status" example:"In Process"`
 	OrderItems      []OrderItem    `gorm:"foreignKey:OrderID;references:ID"`
@@ -66,6 +66,26 @@ func (oi *OrderItem) BeforeSave(tx *gorm.DB) (err error) {
 
 	oi.SubTotal = product.Price * float64(oi.Quantity)
 	return nil
+}
+
+// OrderResponse defines the structure for order response.
+type OrderResponse struct {
+	Name          string               `json:"name"`
+	CodeOrder     string               `json:"code_order"`
+	Status        string               `json:"status"`
+	OrderDate     string               `json:"order_date"`
+	OrderTime     string               `json:"order_time"`
+	TableName     string               `json:"table_name"`
+	OrderItems    []*OrderItemResponse `json:"order_items"`
+	TotalSubTotal float64              `json:"total_sub_total"`
+}
+
+// OrderItemResponse defines the structure for order item response.
+type OrderItemResponse struct {
+	ProductName string  `json:"product_name"`
+	Quantity    int     `json:"quantity"`
+	SubTotal    float64 `json:"sub_total"`
+	Status      string  `json:"status"`
 }
 
 func OrderSeed() []Order {
