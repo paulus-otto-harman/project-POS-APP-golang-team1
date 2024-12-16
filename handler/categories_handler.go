@@ -162,17 +162,8 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 		filename = fileHeader.Filename
 		ctrl.logger.Info("Received new file", zap.String("filename", filename))
 	}
-	if fileHeader == nil {
-		ctrl.logger.Error("File icon is missing")
-		BadResponse(c, "File icon is required", http.StatusBadRequest)
-		return
-	}
-	if err != nil {
-		ctrl.logger.Error("Failed to get file from request", zap.Error(err))
-		BadResponse(c, "Failed get data: "+err.Error(), http.StatusBadRequest)
-		return
-	}
 
+	
 	if err := c.ShouldBind(&category); err != nil {
 		ctrl.logger.Error("Invalid input", zap.Error(err))
 		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)

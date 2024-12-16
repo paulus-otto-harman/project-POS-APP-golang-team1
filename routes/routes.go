@@ -45,12 +45,21 @@ func NewRoutes(ctx infra.ServiceContext) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
+	reservationsRoutes := r.Group("/reservations")
+	{
+		reservationsRoutes.GET("/", ctx.Ctl.ReservationHandler.All)
+		reservationsRoutes.POST("/", ctx.Ctl.ReservationHandler.Add)
+		reservationsRoutes.GET("/:id", ctx.Ctl.ReservationHandler.GetByID)
+		reservationsRoutes.PUT("/:id", ctx.Ctl.ReservationHandler.Update)
+	}
+
 	categoriesRoutes := r.Group("/categories")
 	{
 		categoriesRoutes.GET("/", ctx.Ctl.CategoryHandler.All)
 		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
 		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
 	}
+  
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
