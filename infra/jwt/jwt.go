@@ -2,8 +2,10 @@ package jwt
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"project/helper"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,22 +65,24 @@ func (j *JWT) CreateToken(email, ip string, ID string) (string, error) {
 // JWT for API
 func (j *JWT) AuthJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		key, err := jwt.ParseRSAPublicKeyFromPEM([]byte(j.PublicKey))
 		if err != nil {
+			helper.BadResponse(c, "unauthorized", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
 		claims := &customClaims{}
 		tokenValue := c.GetHeader("Authorization")
-
 		if len(tokenValue) == 0 {
+			c.Abort()
 			return
 		}
 
-		tkn, err := jwt.ParseWithClaims(string(tokenValue), claims, func(token *jwt.Token) (interface{}, error) {
+		tkn, err := jwt.ParseWithClaims(strings.Split(tokenValue, "Bearer ")[1], claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				helper.BadResponse(c, fmt.Sprintf("unexpected method: %s", token.Header["alg"]), http.StatusUnauthorized)
+				c.Abort()
 				return nil, err
 			}
 
@@ -86,12 +90,15 @@ func (j *JWT) AuthJWT() gin.HandlerFunc {
 		})
 
 		if err != nil {
+			log.Println(err)
 			helper.BadResponse(c, "fail to validate signature or session expired", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
 		if !tkn.Valid {
 			helper.BadResponse(c, "invalid token", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 

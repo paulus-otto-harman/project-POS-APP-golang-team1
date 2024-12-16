@@ -8,7 +8,6 @@ import (
 
 type Config struct {
 	AppDebug        bool
-	AppSecret       string
 	DB              DatabaseConfig
 	Email           EmailConfig
 	RedisConfig     RedisConfig
@@ -68,7 +67,6 @@ func LoadConfig() (Config, error) {
 		Email: loadEmailConfig(),
 
 		AppDebug:        viper.GetBool("APP_DEBUG"),
-		AppSecret:       viper.GetString("APP_SECRET"),
 		ServerPort:      viper.GetString("SERVER_PORT"),
 		ShutdownTimeout: viper.GetInt("SHUTDOWN_TIMEOUT"),
 		PrivateKey:      viper.GetString("PRIVATE_KEY"),

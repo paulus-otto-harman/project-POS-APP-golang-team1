@@ -59,7 +59,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	// instance controller
 	Ctl := handler.NewHandler(services, logger, jwtLib)
 
-	mw := middleware.NewMiddleware(rdb, appConfig.AppSecret)
+	mw := middleware.NewMiddleware(rdb, jwtLib)
 
 	return &ServiceContext{Cacher: rdb, Cfg: appConfig, Ctl: *Ctl, Log: logger, Middleware: mw, JWT: jwtLib}, nil
 }

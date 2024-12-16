@@ -8,7 +8,7 @@ import (
 
 func notificationRoutes(ctx infra.ServiceContext, r *gin.Engine) {
 	notifHandler := ctx.Ctl.NotificationHandler
-	notifGroup := r.Group("/notifications", ctx.Middleware.Authentication())
+	notifGroup := r.Group("/notifications")
 
 	notifGroup.GET("/", notifHandler.GetNotifications)
 	notifGroup.PUT("/:id", notifHandler.UpdateNotificationStatus)

@@ -18,3 +18,7 @@ func NewPasswordResetRepository(db *gorm.DB, log *zap.Logger) *PasswordResetRepo
 func (repo PasswordResetRepository) Create(token *domain.PasswordResetToken) error {
 	return repo.db.Create(&token).Error
 }
+
+func (repo PasswordResetRepository) Update(token *domain.PasswordResetToken) error {
+	return repo.db.Save(&token).Error
+}

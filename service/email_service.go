@@ -52,8 +52,6 @@ func (s *emailService) Send(to, subject, htmlTemplate string, data interface{}) 
 	if err = tmpl.Execute(&body, data); err != nil {
 		return "", err
 	}
-	s.log.Info("Sending email", zap.String("to", to), zap.String("subject", subject))
-	s.log.Info("Sending email", zap.String("body", body.String()))
 	message.SetHTML(body.String())
 
 	var response *mailersend.Response

@@ -21,10 +21,12 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
+	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
+	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user", ctx.Ctl.UserHandler.Update)
 
-	r.GET("/staffs", ctx.Middleware.UserCan("list-staff"), func(c *gin.Context) {
+	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.GET("/staffs", ctx.Middleware.Jwt.AuthJWT(), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
@@ -54,7 +56,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
 	}
-
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
