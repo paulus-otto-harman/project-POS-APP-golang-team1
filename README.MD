@@ -41,6 +41,3 @@ to run cron jobs, go to folder ```cmd/cron```
 ```bash
 go run .
 ```
-
-
-test

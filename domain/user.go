@@ -1,9 +1,8 @@
 package domain
 
 import (
-	"time"
-
 	"gorm.io/gorm"
+	"time"
 )
 
 type User struct {
@@ -17,7 +16,6 @@ type User struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
 	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:Email;references:Email" json:"-"`
-	Notifications       []Notification       `gorm:"many2many:user_notifications" json:"user_notifications"` // Reference the join table
 }
 
 func UserSeed() []User {

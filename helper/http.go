@@ -8,8 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"project/domain"
 	"sync"
+
+	"project/domain"
 )
 
 func Upload(wg *sync.WaitGroup, files []*multipart.FileHeader) ([]domain.CdnResponse, error) {
