@@ -34,5 +34,6 @@ func dataSeeds() []interface{} {
 		domain.ProductSeed(),
 		seeder.Permission(),
 		seeder.User(),
+		seeder.PasswordResetTokenSeed(),
 	}
 }

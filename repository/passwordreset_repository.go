@@ -26,5 +26,9 @@ func (repo PasswordResetRepository) GetValidToken(token *domain.PasswordResetTok
 }
 
 func (repo PasswordResetRepository) Update(token *domain.PasswordResetToken) error {
-	return repo.db.Model(&token).Update("validated_at", token.ValidatedAt).Error
+	return repo.db.Save(&token).Error
+}
+
+func (repo PasswordResetRepository) Get(token *domain.PasswordResetToken) error {
+	return repo.db.Preload("User").First(token).Error
 }

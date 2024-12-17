@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,26 +24,10 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
-	r.PUT("/user", ctx.Ctl.UserHandler.Update)
+	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
-	r.GET("/staffs", ctx.Middleware.CanAccess("Dashboard"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.GET("/staffs/:id", ctx.Middleware.CanAccess("view-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.POST("/staffs", ctx.Middleware.CanAccess("create-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.PUT("/staffs/:id", ctx.Middleware.CanAccess("update-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.DELETE("/staffs/:id", ctx.Middleware.CanAccess("delete-staff"), func(c *gin.Context) {
+	r.GET("/staffs", ctx.Middleware.CanAccess("Dashboard"), ctx.Middleware.CanAccess("Categories"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
@@ -113,7 +98,7 @@ func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
 func launchServer(server *http.Server, port string) {
 	// service connections
 	log.Println("Listening and serving HTTP on", port)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("listen: %s\n", err)
 	}
 }

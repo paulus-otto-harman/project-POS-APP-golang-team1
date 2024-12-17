@@ -23,7 +23,7 @@ func NewService(repo repository.Repository, appConfig config.Config, log *zap.Lo
 		Email:         NewEmailService(appConfig.Email, log),
 		Otp:           NewOtpService(log),
 		PasswordReset: NewPasswordResetService(repo.PasswordReset, log),
-		User:          NewUserService(repo.User, log),
+		User:          NewUserService(repo, log),
 		Notification:  NewNotificationService(repo, log),
 		Reservation:   NewReservationService(repo.Reservation, log),
 		Category:      NewCategoryService(repo.Category, log),

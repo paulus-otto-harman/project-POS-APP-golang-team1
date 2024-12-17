@@ -43,3 +43,7 @@ func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
 	}
 	return users, nil
 }
+
+func (repo UserRepository) Update(user *domain.User) error {
+	return repo.db.Save(user).Error
+}

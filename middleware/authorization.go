@@ -29,6 +29,7 @@ func (m *Middleware) CanAccess(permission string) gin.HandlerFunc {
 		isAuthorized, err = m.cacher.SIsMember(fmt.Sprintf("user:%s:permission", userID), permission)
 
 		if err != nil {
+			helper.BadResponse(c, "server error", http.StatusInternalServerError)
 			c.Abort()
 			return
 		}
