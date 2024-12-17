@@ -129,7 +129,7 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 		BadResponse(c, "Birth date is required", http.StatusBadRequest)
 		return
 	}
-	user.BirthDate = helper.Date(birthDateStr)
+	user.BirthDate = helper.MonthDate(birthDateStr)
 	if err := c.ShouldBind(&user); err != nil {
 		ctrl.logger.Error("Failed to bind JSON", zap.Error(err))
 		BadResponse(c, "invalid request body", http.StatusBadRequest)
