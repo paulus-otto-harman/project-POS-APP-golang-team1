@@ -26,7 +26,7 @@ func (repo InventoryRepository) All(page, limit int, productStatus, categoryName
 
 	// Mulai query
 	query := repo.db.Model(&domain.Inventory{}).
-		Joins("JOIN categories ON categories.id = inventories.category_id")
+		Joins("JOIN categories ON categories.id = inventories.category_id").Where("inventories.deleted_at IS NULL")
 
 	// Filter by Category Name
 	if categoryName != "" {
