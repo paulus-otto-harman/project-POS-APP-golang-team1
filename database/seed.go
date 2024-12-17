@@ -27,5 +27,10 @@ func SeedAll(db *gorm.DB) error {
 func dataSeeds() []interface{} {
 	return []interface{}{
 		domain.UserSeed(),
+		// domain.NotificationSeed(),
+		domain.ReservationSeed(),
+		domain.NotificationSeed(),
+		domain.CategorySeed(),
+		domain.ProductSeed(),
 	}
 }
