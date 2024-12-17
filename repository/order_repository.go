@@ -2,8 +2,12 @@ package repository
 
 import (
 	"errors"
+	// "fmt"
+	// "log"
+
 	// "math"
 	"project/domain"
+	// "project/helper"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -18,17 +22,46 @@ func NewOrderRepository(db *gorm.DB, log *zap.Logger) *OrderRepository {
 	return &OrderRepository{db: db, log: log}
 }
 
+// func (repo OrderRepository) GenerateCodeOrder() (string, error) {
+// 	var lastOrder domain.Order
+// 	if err := repo.db.Order("id desc").First(&lastOrder).Error; err != nil && err != gorm.ErrRecordNotFound {
+// 		return "", errors.New("failed to retrieve last order")
+// 	}
+
+// 	lastCode := "ORD000"
+// 	if lastOrder.CodeOrder != "" {
+// 		lastCode = lastOrder.CodeOrder
+// 		log.Println(lastCode, "<<<")
+// 	}
+	
+// 	codeNum, err := helper.Uint(lastCode[3:])
+// 	if err != nil {
+// 		return "", errors.New("failed to parse last order code number")
+// 	}
+// 	log.Println(codeNum, ">>>>>")
+	
+// 	newCodeNum := codeNum + 1
+// 	newCode := fmt.Sprintf("ORD%03d", newCodeNum)
+// 	log.Println(newCode, ">>>>>")
+
+// 	return newCode, nil
+// }
+
 func (repo OrderRepository) Create(Order *domain.Order) error {
 
 	err := repo.db.Create(&Order).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			repo.log.Error("Duplicate Order name", zap.Error(err))
-			return errors.New("order with this name already exists")
+			repo.log.Error("Duplicate code order", zap.Error(err))
+			return errors.New("order with this code order already exists")
 		}
 		repo.log.Error("Failed to save Order", zap.Error(err))
 		return err
 	}
+	// Order.CodeOrder, err = repo.GenerateCodeOrder()
+	// if err != nil {
+	// 	return err
+	// }
 
 	repo.log.Info("Order successfully created")
 	return nil
@@ -80,8 +113,18 @@ func (repo OrderRepository) AllPayments() ([]*domain.PaymentMethod, error) {
 	return payments, nil
 }
 
-func (repo *OrderRepository) FindByID(Order *domain.Order, id string) error {
-	if err := repo.db.First(Order, "id = ?", id).Error; err != nil {
+func (repo *OrderRepository) FindByIDOrder(order *domain.OrderDetail, id uint) error {
+	if err := repo.db.First(order, "order_id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("order not found")
+		}
+		repo.log.Error("Failed to fetch Order by ID", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func (repo *OrderRepository) FindByIDTable(table *domain.Table, id string) error {
+	if err := repo.db.First(table, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("order not found")
 		}
@@ -99,11 +142,11 @@ func (repo *OrderRepository) Update(Order *domain.Order) error {
 	return nil
 }
 
-func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error) {
-	var orders []*domain.Order
+func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error) {
+	var orders []*domain.OrderDetail
 	var totalItems int64
 
-	query := repo.db.Model(&domain.Order{})
+	query := repo.db.Model(&domain.OrderDetail{})
 	if name != "" {
 		query = query.Where("name ILIKE ?", name+"%")
 	}
@@ -124,13 +167,7 @@ func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status s
 		return nil, 0, nil
 	}
 
-	err := query.Preload("Table", func(db *gorm.DB) *gorm.DB { return db.Select("id, name") }).
-		Preload("PaymentMethod", func(db *gorm.DB) *gorm.DB { return db.Select("id, name") }).
-		Preload("OrderItems", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("Product", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id, name, price")
-			}).Select("id, order_id, product_id, quantity, sub_total, status")
-		}).
+	err := query.
 		Offset((page - 1) * limit).
 		Limit(limit).
 		Find(&orders).Error

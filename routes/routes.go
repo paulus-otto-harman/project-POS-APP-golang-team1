@@ -68,6 +68,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	ordersRoutes := r.Group("/orders")
 	{
 		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
+		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
 	}
 
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 	"project/domain"
 	"project/repository"
 
@@ -11,10 +12,10 @@ import (
 type OrderService interface {
 	AllTables(page, limit int) ([]*domain.Table, int64, error)
 	AllPayments() ([]*domain.PaymentMethod, error)
-	Create(order *domain.Order) error
-	FindByID(order *domain.Order, id string) error
+	CreateOrder(name string, tableID uint, orderItems []domain.OrderItem) error
+	FindByIDOrder(order *domain.OrderDetail, id uint) error
 	Update(order *domain.Order) error
-	AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error)
+	AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error)
 }
 
 type orderService struct {
@@ -48,16 +49,29 @@ func (s *orderService) AllPayments() ([]*domain.PaymentMethod, error) {
 
 	return payments, nil
 }
-func (s *orderService) Create(order *domain.Order) error {
-	if order.Name == "" {
-		return errors.New("order name is required")
+func (s *orderService) CreateOrder(name string, tableID uint, orderItems []domain.OrderItem) error {
+	// codeOrder, err := s.repo.GenerateCodeOrder()
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Println(codeOrder,"service<<<<<")
+	order := &domain.Order{
+		Name:            name,
+		TableID:         tableID,
+		// CodeOrder:       codeOrder,
+		OrderItems:      orderItems,
+	}
+	log.Println(order.CodeOrder,"service>>>>>")
+	
+	if err := s.repo.Create(order); err != nil {
+		return err
 	}
 
-	return s.repo.Create(order)
+	return nil
 }
 
-func (s *orderService) FindByID(order *domain.Order, id string) error {
-	if err := s.repo.FindByID(order, id); err != nil {
+func (s *orderService) FindByIDOrder(order *domain.OrderDetail, id uint) error {
+	if err := s.repo.FindByIDOrder(order, id); err != nil {
 		s.log.Error("Failed to find order", zap.Error(err))
 		return err
 	}
@@ -75,7 +89,7 @@ func (s *orderService) Update(order *domain.Order) error {
 	}
 	return nil
 }
-func (s *orderService) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.Order, int64, error) {
+func (s *orderService) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error) {
 	orders, totalItems, err := s.repo.AllOrders(page, limit, name, codeOrder, status)
 	if err != nil {
 		return nil, 0, err

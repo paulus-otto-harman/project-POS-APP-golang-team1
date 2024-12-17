@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"math"
 	"net/http"
 	"project/domain"
 	"project/helper"
@@ -88,7 +87,25 @@ func (ctrl *OrderController) AllPayments(c *gin.Context) {
 // @Router /categories/create [post]
 func (ctrl *OrderController) Create(c *gin.Context) {
 
-	GoodResponseWithData(c, "create success", http.StatusCreated, nil)
+	var input struct {
+		Name            string             `json:"name" binding:"required"`
+		TableID         uint               `json:"table_id" binding:"required"`
+		// PaymentMethodID uint               `json:"payment_method_id" binding:"required"`
+		OrderItems      []domain.OrderItem `json:"order_items" binding:"required,dive"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		BadResponse(c, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := ctrl.service.CreateOrder(input.Name, input.TableID, input.OrderItems)
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "Order created successfully", http.StatusCreated, nil)
 }
 
 // @Summary Update Category
@@ -144,33 +161,33 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 
 	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
 
-	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), ctrl.formatOrderResponse(orders))
+	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), orders)
 }
 
-func (ctrl *OrderController) formatOrderResponse(orders []*domain.Order) []*domain.OrderResponse {
-	response := make([]*domain.OrderResponse, len(orders))
-	for i, order := range orders {
-		totalSubTotal := 0.0
-		orderItems := make([]*domain.OrderItemResponse, len(order.OrderItems))
-		for j, item := range order.OrderItems {
-			orderItems[j] = &domain.OrderItemResponse{
-				ProductName: item.Product.Name,
-				Quantity:    item.Quantity,
-				SubTotal:    item.SubTotal,
-				Status:      item.Status,
-			}
-			totalSubTotal += item.SubTotal
-		}
-		response[i] = &domain.OrderResponse{
-			Name:          order.Name,
-			CodeOrder:     order.CodeOrder,
-			Status:        order.Status,
-			OrderDate:     order.CreatedAt.Format("2006-01-02"),
-			OrderTime:     order.CreatedAt.Format("15:04:05"),
-			TableName:     order.Table.Name,
-			OrderItems:    orderItems,
-			TotalSubTotal: math.Round(totalSubTotal*100) / 100,
-		}
-	}
-	return response
-}
+// func (ctrl *OrderController) formatOrderResponse(orders []*domain.Order) []*domain.OrderResponse {
+// 	response := make([]*domain.OrderResponse, len(orders))
+// 	for i, order := range orders {
+// 		totalSubTotal := 0.0
+// 		orderItems := make([]*domain.OrderItemResponse, len(order.OrderItems))
+// 		for j, item := range order.OrderItems {
+// 			orderItems[j] = &domain.OrderItemResponse{
+// 				ProductName: item.Product.Name,
+// 				Quantity:    item.Quantity,
+// 				SubTotal:    item.SubTotal,
+// 				Status:      item.Status,
+// 			}
+// 			totalSubTotal += item.SubTotal
+// 		}
+// 		response[i] = &domain.OrderResponse{
+// 			Name:          order.Name,
+// 			CodeOrder:     order.CodeOrder,
+// 			Status:        order.Status,
+// 			OrderDate:     order.CreatedAt.Format("2006-01-02"),
+// 			OrderTime:     order.CreatedAt.Format("15:04:05"),
+// 			TableName:     order.Table.Name,
+// 			OrderItems:    orderItems,
+// 			TotalSubTotal: math.Round(totalSubTotal*100) / 100,
+// 		}
+// 	}
+// 	return response
+// }

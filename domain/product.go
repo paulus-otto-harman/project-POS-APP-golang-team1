@@ -8,14 +8,14 @@ import (
 
 type Product struct {
 	ID           uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	CategoryID   uint      `gorm:"not null" json:"-" binding:"required,gt=0" form:"category_id" example:"1"`
+	CategoryID   uint      `gorm:"not null" json:"-" example:"1"`
 	Category     Category  `gorm:"foreignKey:CategoryID;references:ID"`
-	Image        string    `gorm:"size:255;not null" json:"image" binding:"omitempty" example:"/image/product.png"`
-	Name         string    `gorm:"size:100;unique" json:"name" form:"name"`
-	CodeProduct  string    `gorm:"size:50;unique" json:"code_product" form:"code_product"`
-	Stock        int       `gorm:"not null" binding:"required,gt=0" json:"stock" form:"stock" example:"50"`
-	Price        float64   `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"price" form:"price" example:"699.99"`
-	Availability string    `gorm:"size:20;check:availability IN ('In Stock', 'Out Of Stock')" json:"availability" example:"In Stock"`
+	Image        string    `gorm:"size:255;not null" json:"image" example:"/image/product.png"`
+	Name         string    `gorm:"size:100;unique" json:"name"`
+	CodeProduct  string    `gorm:"size:50;unique" json:"code_product"`
+	Stock        int       `gorm:"not null" json:"stock" example:"50"`
+	Price        float64   `gorm:"type:decimal(10,2);not null" json:"price" example:"699.99"`
+	Availability string    `gorm:"size:20;check:availability IN ('In Stock',  'Low Stock', 'Out Of Stock')" json:"availability" example:"In Stock"`
 	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
 }
@@ -23,9 +23,12 @@ type Product struct {
 func (v *Product) BeforeSave(tx *gorm.DB) (err error) {
 	if v.Stock > 0 {
 		v.Availability = "In Stock"
+	} else if v.Stock <= 5 {
+		v.Availability = "Low Stock"
 	} else {
 		v.Availability = "Out Of Stock"
 	}
+
 	return nil
 }
 

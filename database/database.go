@@ -62,5 +62,13 @@ func makePostgresString(cfg config.Config) string {
 }
 
 func createCustomDBTypes(db *gorm.DB) {
-	
+	db.Exec(`
+		DO $$ BEGIN CREATE TYPE status_payment AS ENUM ('In Process', 'Completed', 'Cancelled');
+		EXCEPTION WHEN duplicate_object THEN null; END $$;
+	`)
+	db.Exec(`
+		DO $$ BEGIN CREATE TYPE status_kitchen AS ENUM ('In The Kitchen', 'Cooking Now', 'Ready To Serve');
+		EXCEPTION WHEN duplicate_object THEN null; END $$;
+	`)
+
 }

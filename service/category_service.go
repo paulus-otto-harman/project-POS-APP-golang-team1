@@ -63,6 +63,9 @@ func (s *categoryService) Update(category *domain.Category) error {
 	if category.Name == "" {
 		return errors.New("category name is required")
 	}
+	if category.Description == "" {
+		return errors.New("category name is required")
+	}
 
 	if err := s.repo.Update(category); err != nil {
 		s.log.Error("Failed to update category", zap.Error(err))
