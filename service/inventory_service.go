@@ -12,6 +12,7 @@ type InventoryService interface {
 	All(page, limit int, productStatus, categoryName, stock string, quantity int, minPrice, maxPrice float64) ([]*domain.Inventory, int64, error)
 	Add(input *domain.Inventory, categoryName string) (*domain.Inventory, error)
 	Update(id uint, inventoryData *domain.Inventory, categoryName string) (*domain.Inventory, error)
+	Delete(id uint) error
 }
 
 type inventoryService struct {
@@ -84,4 +85,15 @@ func (s *inventoryService) Update(id uint, inventoryData *domain.Inventory, cate
 	}
 
 	return updatedInventory, nil
+}
+
+func (s *inventoryService) Delete(id uint) error {
+	// Panggil repository untuk soft delete inventory
+	err := s.repo.Delete(id)
+	if err != nil {
+		s.log.Error("Failed to soft delete inventory", zap.Error(err))
+		return err
+	}
+
+	return nil
 }

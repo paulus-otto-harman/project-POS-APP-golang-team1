@@ -172,3 +172,34 @@ func (ctrl *InventoryController) Update(c *gin.Context) {
 
 	GoodResponseWithData(c, "Inventory updated successfully", http.StatusOK, nil)
 }
+
+// @Summary Soft delete an inventory item
+// @Description Soft deletes an inventory item by ID (marks it as deleted without removing from database)
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param id path int true "Inventory ID"
+// @Success 200 {object} domain.Response "Inventory soft deleted successfully"
+// @Failure 400 {object} domain.Response "Invalid inventory ID"
+// @Failure 500 {object} domain.Response "Failed to soft delete inventory"
+// @Router /inventory/{id}/soft-delete [delete]
+func (ctrl *InventoryController) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	// Convert id to uint
+	inventoryID, err := helper.Uint(id)
+	if err != nil {
+		ctrl.logger.Error("Invalid inventory ID", zap.String("id", id))
+		BadResponse(c, "Invalid inventory ID", http.StatusBadRequest)
+		return
+	}
+
+	// Panggil service untuk soft delete inventory
+	err = ctrl.service.Delete(inventoryID)
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "Inventory soft deleted successfully", http.StatusOK, nil)
+}

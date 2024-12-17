@@ -70,6 +70,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 		inventoryRoutes.GET("/", ctx.Ctl.InventoryHandler.All)
 		inventoryRoutes.POST("/", ctx.Ctl.InventoryHandler.Add)
 		inventoryRoutes.PUT("/:id", ctx.Ctl.InventoryHandler.Update)
+		inventoryRoutes.DELETE("/:id", ctx.Ctl.InventoryHandler.Delete)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

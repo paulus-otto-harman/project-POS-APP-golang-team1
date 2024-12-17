@@ -7,18 +7,19 @@ import (
 )
 
 type Inventory struct {
-	ID          uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	CategoryID  uint      `gorm:"not null" json:"-" binding:"omitempty,gt=0" form:"category_id" example:"1"`
-	Category    Category  `gorm:"foreignKey:CategoryID;references:ID" swaggerignore:"true"`
-	Image       string    `gorm:"size:255;not null" json:"image" binding:"omitempty" example:"/image/product.png"`
-	Name        string    `gorm:"size:100;unique" json:"name" form:"name"`
-	CodeProduct string    `gorm:"size:50;unique" json:"code_product" form:"code_product"`
-	Quantity    int       `gorm:"not null" binding:"omitempty,gt=0" json:"quantity" form:"quantity" example:"50"`
-	Price       float64   `gorm:"type:decimal(10,2);not null" binding:"omitempty,gt=0" json:"price" form:"price" example:"699.99"`
-	Stock       string    `gorm:"size:20;check:stock IN ('In Stock', 'Low Stock', 'Out Of Stock')" json:"stock" example:"In Stock"`
-	Status      string    `gorm:"not null;check:status IN ('Active', 'Inactive')" binding:"omitempty,gt=0" json:"status" form:"status" example:"Active"`
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+	ID          uint       `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	CategoryID  uint       `gorm:"not null" json:"-" binding:"omitempty,gt=0" form:"category_id" example:"1"`
+	Category    Category   `gorm:"foreignKey:CategoryID;references:ID" swaggerignore:"true"`
+	Image       string     `gorm:"size:255;not null" json:"image" binding:"omitempty" example:"/image/product.png"`
+	Name        string     `gorm:"size:100;unique" json:"name" form:"name"`
+	CodeProduct string     `gorm:"size:50;unique" json:"code_product" form:"code_product"`
+	Quantity    int        `gorm:"not null" binding:"omitempty,gt=0" json:"quantity" form:"quantity" example:"50"`
+	Price       float64    `gorm:"type:decimal(10,2);not null" binding:"omitempty,gt=0" json:"price" form:"price" example:"699.99"`
+	Stock       string     `gorm:"size:20;check:stock IN ('In Stock', 'Low Stock', 'Out Of Stock')" json:"stock" example:"In Stock"`
+	Status      string     `gorm:"not null;check:status IN ('Active', 'Inactive')" binding:"omitempty,gt=0" json:"status" form:"status" example:"Active"`
+	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
+	UpdatedAt   time.Time  `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (v *Inventory) BeforeSave(tx *gorm.DB) (err error) {

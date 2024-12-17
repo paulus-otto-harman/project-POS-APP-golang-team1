@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"project/domain"
+	"time"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -196,4 +197,27 @@ func (repo InventoryRepository) Update(id uint, inventoryData *domain.Inventory,
 
 	repo.log.Info("Inventory updated successfully", zap.Uint("inventory_id", existingInventory.ID))
 	return &existingInventory, nil
+}
+
+func (repo *InventoryRepository) Delete(id uint) error {
+	var inventory domain.Inventory
+
+	// Cek apakah inventory dengan ID tertentu ada di database
+	if err := repo.db.First(&inventory, id).Error; err != nil {
+		repo.log.Error("Inventory not found", zap.Uint("inventory_id", id), zap.Error(err))
+		return fmt.Errorf("inventory with ID %d not found", id)
+	}
+
+	// Lakukan soft delete dengan mengisi field deleted_at
+	currentTime := time.Now()
+	inventory.DeletedAt = &currentTime
+
+	// Update database dengan soft delete
+	if err := repo.db.Save(&inventory).Error; err != nil {
+		repo.log.Error("Failed to soft delete inventory", zap.Error(err))
+		return fmt.Errorf("failed to soft delete inventory: %v", err)
+	}
+
+	repo.log.Info("Inventory soft deleted successfully", zap.Uint("inventory_id", inventory.ID))
+	return nil
 }
