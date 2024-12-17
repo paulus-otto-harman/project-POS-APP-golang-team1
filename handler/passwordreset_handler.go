@@ -17,9 +17,9 @@ func NewPasswordResetController(service service.PasswordResetService, logger *za
 	return &PasswordResetController{service: service, logger: logger}
 }
 
-// Reset Password endpoint
-// @Summary Password Reset
-// @Description request password reset
+// Request OTP endpoint
+// @Summary Validate Email
+// @Description request OTP to reset password. Email must be valid
 // @Tags Auth
 // @Accept  json
 // @Produce  json
