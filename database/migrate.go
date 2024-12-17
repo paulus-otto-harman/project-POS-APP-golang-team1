@@ -43,6 +43,7 @@ func dropTables(db *gorm.DB) error {
 		&domain.Category{},
 		&domain.Product{},
 		&domain.UserNotification{},
+		&domain.Inventory{},
 	)
 }
 
