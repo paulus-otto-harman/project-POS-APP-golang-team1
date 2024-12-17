@@ -21,7 +21,7 @@ func NewHandler(service service.Service, logger *zap.Logger) *Handler {
 	return &Handler{
 		AuthHandler:          *NewAuthController(service.Auth, logger),
 		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
-		UserHandler:          *NewUserController(service.User, logger),
+		UserHandler:          *NewUserController(service, logger),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),
