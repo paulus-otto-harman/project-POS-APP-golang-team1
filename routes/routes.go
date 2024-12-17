@@ -26,23 +26,23 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.PUT("/user", ctx.Ctl.UserHandler.Update)
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
-	r.GET("/staffs", ctx.Middleware.Jwt.AuthJWT(), func(c *gin.Context) {
+	r.GET("/staffs", ctx.Middleware.CanAccess("Dashboard"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.GET("/staffs/:id", ctx.Middleware.UserCan("view-staff"), func(c *gin.Context) {
+	r.GET("/staffs/:id", ctx.Middleware.CanAccess("view-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.POST("/staffs", ctx.Middleware.UserCan("create-staff"), func(c *gin.Context) {
+	r.POST("/staffs", ctx.Middleware.CanAccess("create-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.PUT("/staffs/:id", ctx.Middleware.UserCan("update-staff"), func(c *gin.Context) {
+	r.PUT("/staffs/:id", ctx.Middleware.CanAccess("update-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.DELETE("/staffs/:id", ctx.Middleware.UserCan("delete-staff"), func(c *gin.Context) {
+	r.DELETE("/staffs/:id", ctx.Middleware.CanAccess("delete-staff"), func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
@@ -60,7 +60,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
 		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
 	}
-  
+
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)

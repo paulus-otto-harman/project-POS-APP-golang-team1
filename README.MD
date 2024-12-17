@@ -41,6 +41,8 @@ to generate swagger API documentation, from project root, run
 ```bash
 swag init -g cmd/main.go
 ```
+> [!NOTE]  
+> The generated swagger docs won't be committed to this project repository
 
 ## Cron Jobs
 to run cron jobs, go to folder ```cmd/cron```

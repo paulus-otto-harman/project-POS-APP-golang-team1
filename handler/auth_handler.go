@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"project/database"
 	"project/domain"
 	"project/infra/jwt"
 	"project/service"
@@ -15,10 +17,11 @@ type AuthController struct {
 	service service.AuthService
 	logger  *zap.Logger
 	jwt     jwt.JWT
+	cacher  database.Cacher
 }
 
-func NewAuthController(service service.AuthService, logger *zap.Logger, jwt jwt.JWT) *AuthController {
-	return &AuthController{service, logger, jwt}
+func NewAuthController(service service.AuthService, logger *zap.Logger, cacher database.Cacher, jwt jwt.JWT) *AuthController {
+	return &AuthController{service, logger, jwt, cacher}
 }
 
 // Login endpoint
@@ -53,6 +56,12 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 		return
 	}
 
+	ctrl.logger.Info("found", zap.Any("user", user))
+	ctrl.cacher.HSet(fmt.Sprintf("user:%d", user.ID), "role", string(user.Role))
+	for _, permission := range user.Permissions {
+		ctrl.cacher.SAdd(fmt.Sprintf("user:%d:permission", user.ID), permission.Name)
+	}
+
 	// Buat token JWT
 	token, err := ctrl.jwt.CreateToken(user.Email, ip, strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
@@ -63,7 +72,7 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 
 	// Buat response data
 	data := gin.H{
-		"user":  user,
+		"user":  user.Email,
 		"token": token,
 	}
 

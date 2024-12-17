@@ -25,7 +25,6 @@ func (s *authService) Login(email, password string) (*domain.User, error) {
 	s.log.Info("Attempting to log in user", zap.String("email", email))
 
 	// Cari user berdasarkan email
-
 	user, err := s.repo.Get(domain.User{Email: email})
 	if err != nil {
 		s.log.Error("Login failed", zap.Error(err))

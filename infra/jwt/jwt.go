@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"project/helper"
 	"strings"
@@ -23,6 +22,7 @@ type JWT struct {
 	PrivateKey string
 	PublicKey  string
 	Log        *zap.Logger
+	UserID     string
 }
 
 type customClaims struct {
@@ -85,12 +85,10 @@ func (j *JWT) AuthJWT() gin.HandlerFunc {
 				c.Abort()
 				return nil, err
 			}
-
 			return key, nil
 		})
 
 		if err != nil {
-			log.Println(err)
 			helper.BadResponse(c, "fail to validate signature or session expired", http.StatusUnauthorized)
 			c.Abort()
 			return
@@ -101,6 +99,9 @@ func (j *JWT) AuthJWT() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		c.Set("user-id", claims.ID)
+		//j.UserID = claims.ID
 
 		c.Next()
 	}

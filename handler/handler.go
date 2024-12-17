@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"project/database"
 	"project/domain"
 	"project/infra/jwt"
 	"project/service"
@@ -18,9 +19,9 @@ type Handler struct {
 	CategoryHandler      CategoryController
 }
 
-func NewHandler(service service.Service, logger *zap.Logger, jwt jwt.JWT) *Handler {
+func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher, jwt jwt.JWT) *Handler {
 	return &Handler{
-		AuthHandler:          *NewAuthController(service.Auth, logger, jwt),
+		AuthHandler:          *NewAuthController(service.Auth, logger, rdb, jwt),
 		PasswordResetHandler: *NewPasswordResetController(service, logger),
 		UserHandler:          *NewUserController(service.User, logger),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),

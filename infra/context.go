@@ -57,7 +57,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	services := service.NewService(repo, appConfig, logger)
 
 	// instance controller
-	Ctl := handler.NewHandler(services, logger, jwtLib)
+	Ctl := handler.NewHandler(services, logger, rdb, jwtLib)
 
 	mw := middleware.NewMiddleware(rdb, jwtLib)
 
