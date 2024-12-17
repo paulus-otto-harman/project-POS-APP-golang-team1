@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"project/domain"
+	"time"
 )
 
 type PasswordResetRepository struct {
@@ -19,6 +20,11 @@ func (repo PasswordResetRepository) Create(token *domain.PasswordResetToken) err
 	return repo.db.Create(&token).Error
 }
 
+func (repo PasswordResetRepository) GetValidToken(token *domain.PasswordResetToken) (*domain.PasswordResetToken, error) {
+	result := repo.db.Where("expired_at >= ?", time.Now()).Where("validated_at IS NULL").First(&token)
+	return token, result.Error
+}
+
 func (repo PasswordResetRepository) Update(token *domain.PasswordResetToken) error {
-	return repo.db.Save(&token).Error
+	return repo.db.Model(&token).Update("validated_at", token.ValidatedAt).Error
 }

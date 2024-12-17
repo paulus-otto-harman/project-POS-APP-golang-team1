@@ -71,6 +71,7 @@ func (ctrl *PasswordResetController) Update(c *gin.Context) {
 		BadResponse(c, "invalid parameter", http.StatusBadRequest)
 		return
 	}
+
 	var resetToken ResetToken
 	if err = c.ShouldBindJSON(&resetToken); err != nil {
 		BadResponse(c, "invalid OTP", http.StatusUnprocessableEntity)

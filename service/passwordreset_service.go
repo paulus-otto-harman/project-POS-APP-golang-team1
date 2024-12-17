@@ -28,6 +28,11 @@ func (s *passwordResetService) Create(token *domain.PasswordResetToken) error {
 }
 
 func (s *passwordResetService) Validate(id uuid.UUID, token string) error {
-	passwordResetToken := domain.PasswordResetToken{ID: id, Otp: token, ValidatedAt: helper.Ptr(time.Now())}
-	return s.repo.Update(&passwordResetToken)
+	passwordResetToken, err := s.repo.GetValidToken(&domain.PasswordResetToken{ID: id, Otp: token})
+	if err != nil {
+		return err
+	}
+
+	passwordResetToken.ValidatedAt = helper.Ptr(time.Now())
+	return s.repo.Update(passwordResetToken)
 }
