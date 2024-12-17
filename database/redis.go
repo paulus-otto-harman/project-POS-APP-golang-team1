@@ -145,3 +145,29 @@ func (c *Cacher) Subcribe(channelName string) (*redis.Message, error) {
 	message, err := subscriber.ReceiveMessage(context.Background())
 	return message, err
 }
+
+// Hash
+func (c *Cacher) HSet(key, field, value string) error {
+	return c.rdb.HSet(context.Background(), key, field, value).Err()
+}
+
+func (c *Cacher) HGet(key, field string) (string, error) {
+	return c.rdb.HGet(context.Background(), key, field).Result()
+}
+
+func (c *Cacher) HDel(key, field string) error {
+	return c.rdb.HDel(context.Background(), key, field).Err()
+}
+
+func (c *Cacher) HExists(key, field string) (bool, error) {
+	return c.rdb.HExists(context.Background(), key, field).Result()
+}
+
+// Set
+func (c *Cacher) SAdd(name string, values ...string) error {
+	return c.rdb.SAdd(context.Background(), c.prefix+"_"+name, values).Err()
+}
+
+func (c *Cacher) SIsMember(name, value string) (bool, error) {
+	return c.rdb.SIsMember(context.Background(), c.prefix+"_"+name, value).Result()
+}
