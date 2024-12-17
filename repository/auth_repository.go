@@ -18,7 +18,7 @@ func NewAuthRepository(db *gorm.DB, cacher database.Cacher, log *zap.Logger) *Au
 	return &AuthRepository{db: db, cacher: cacher, log: log}
 }
 
-func (repo AuthRepository) Authenticate(user domain.Login) (string, bool, error) {
+func (repo AuthRepository) Authenticate(user domain.User) (string, bool, error) {
 	if err := repo.db.Where(user).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", false, errors.New("invalid username and/or password")
 	}

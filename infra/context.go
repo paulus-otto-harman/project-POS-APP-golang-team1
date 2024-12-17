@@ -4,7 +4,6 @@ import (
 	"project/config"
 	"project/database"
 	"project/handler"
-	"project/infra/jwt"
 	"project/log"
 	"project/middleware"
 	"project/repository"
@@ -19,7 +18,6 @@ type ServiceContext struct {
 	Ctl        handler.Handler
 	Log        *zap.Logger
 	Middleware middleware.Middleware
-	JWT        jwt.JWT
 }
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -31,22 +29,20 @@ func NewServiceContext() (*ServiceContext, error) {
 	// instance config
 	appConfig, err := config.LoadConfig()
 	if err != nil {
-		return handlerError(err)
+		handlerError(err)
 	}
 
 	// instance logger
 	logger, err := log.InitZapLogger(appConfig)
 	if err != nil {
-		return handlerError(err)
+		handlerError(err)
 	}
 
 	// instance database
 	db, err := database.ConnectDB(appConfig)
 	if err != nil {
-		return handlerError(err)
+		handlerError(err)
 	}
-
-	jwtLib := jwt.NewJWT(appConfig.PrivateKey, appConfig.PublicKey, logger)
 
 	rdb := database.NewCacher(appConfig, 60*60)
 
@@ -54,12 +50,12 @@ func NewServiceContext() (*ServiceContext, error) {
 	repo := repository.NewRepository(db, rdb, appConfig, logger)
 
 	// instance service
-	services := service.NewService(repo, appConfig, logger)
+	service := service.NewService(repo, logger)
 
 	// instance controller
-	Ctl := handler.NewHandler(services, logger, rdb, jwtLib)
+	Ctl := handler.NewHandler(service, logger)
 
-	mw := middleware.NewMiddleware(rdb, jwtLib)
+	mw := middleware.NewMiddleware(rdb, appConfig.AppSecret)
 
-	return &ServiceContext{Cacher: rdb, Cfg: appConfig, Ctl: *Ctl, Log: logger, Middleware: mw, JWT: jwtLib}, nil
+	return &ServiceContext{Cacher: rdb, Cfg: appConfig, Ctl: *Ctl, Log: logger, Middleware: mw}, nil
 }

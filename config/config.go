@@ -7,15 +7,12 @@ import (
 )
 
 type Config struct {
-	AppDebug        bool
-	DB              DatabaseConfig
-	Email           EmailConfig
-	RedisConfig     RedisConfig
-	ServerPort      string
-	ShutdownTimeout int
-
-	PrivateKey string
-	PublicKey  string
+	AppDebug              bool
+	AppSecret             string
+	DB                    DatabaseConfig
+	RedisConfig           RedisConfig
+	ServerPort            string
+	ServerShutdownTimeout uint
 }
 
 type DatabaseConfig struct {
@@ -27,12 +24,6 @@ type DatabaseConfig struct {
 
 	Migrate bool
 	Seeding bool
-}
-
-type EmailConfig struct {
-	ApiKey    string
-	FromName  string
-	FromEmail string
 }
 
 type RedisConfig struct {
@@ -63,14 +54,11 @@ func LoadConfig() (Config, error) {
 
 	// add value to the config
 	config := Config{
-		DB:    loadDatabaseConfig(),
-		Email: loadEmailConfig(),
+		DB: loadDatabaseConfig(),
 
-		AppDebug:        viper.GetBool("APP_DEBUG"),
-		ServerPort:      viper.GetString("SERVER_PORT"),
-		ShutdownTimeout: viper.GetInt("SHUTDOWN_TIMEOUT"),
-		PrivateKey:      viper.GetString("PRIVATE_KEY"),
-		PublicKey:       viper.GetString("PUBLIC_KEY"),
+		AppDebug:   viper.GetBool("APP_DEBUG"),
+		AppSecret:  viper.GetString("APP_SECRET"),
+		ServerPort: viper.GetString("SERVER_PORT"),
 
 		RedisConfig: loadRedisConfig(),
 	}
@@ -86,14 +74,6 @@ func loadDatabaseConfig() DatabaseConfig {
 		Name:     viper.GetString("DB_NAME"),
 		Migrate:  viper.GetBool("DB_MIGRATE"),
 		Seeding:  viper.GetBool("DB_SEEDING"),
-	}
-}
-
-func loadEmailConfig() EmailConfig {
-	return EmailConfig{
-		ApiKey:    viper.GetString("MAILERSEND_API_KEY"),
-		FromName:  viper.GetString("MAILERSEND_FROM_NAME"),
-		FromEmail: viper.GetString("MAILERSEND_FROM_EMAIL"),
 	}
 }
 
@@ -114,7 +94,6 @@ func setDefaultValues() {
 	viper.SetDefault("APP_DEBUG", true)
 	viper.SetDefault("APP_SECRET", "team-1")
 	viper.SetDefault("SERVER_PORT", ":8080")
-	viper.SetDefault("SHUTDOWN_TIMEOUT", 5)
 
 	viper.SetDefault("DB_MIGRATE", false)
 	viper.SetDefault("DB_SEEDING", false)
