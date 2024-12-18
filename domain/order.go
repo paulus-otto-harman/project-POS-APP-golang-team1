@@ -65,11 +65,13 @@ func generateCodeOrder(db *gorm.DB) (string, error) {
 }
 
 func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
-	codeOrder, err := generateCodeOrder(tx)
-	if err != nil {
-		return fmt.Errorf("failed to generate code_order: %v", err)
+	if o.ID == 0 {
+		codeOrder, err := generateCodeOrder(tx)
+		if err != nil {
+			return fmt.Errorf("failed to generate code_order: %v", err)
+		}
+		o.CodeOrder = codeOrder
 	}
-	o.CodeOrder = codeOrder
 	return nil
 }
 
@@ -84,22 +86,73 @@ func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
 		return fmt.Errorf(table.Name + " is already reserved")
 	}
 
-	return nil
-}
-
-func (o *Order) AfterCreate(tx *gorm.DB) (err error) {
-
 	if err := updateTableStatus(tx, o.TableID, false); err != nil {
 		return fmt.Errorf("failed to update table status: %v", err)
 	}
+
 	return nil
 }
 
-func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
-	if o.StatusPayment == OrderCompleted {
+func (o *Order) BeforeUpdate(tx *gorm.DB) (err error) {
 
+	var oldOrder Order
+	if err := tx.Unscoped().First(&oldOrder, o.ID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve old order: %v", err)
+	}
+
+	if oldOrder.TableID != o.TableID {
+		if err := updateTableStatus(tx, oldOrder.TableID, true); err != nil {
+			return fmt.Errorf("failed to update old table status: %v", err)
+		}
+
+		if err := updateTableStatus(tx, o.TableID, false); err != nil {
+			return fmt.Errorf("failed to update new table status: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// func (o *Order) AfterCreate(tx *gorm.DB) (err error) {
+
+// 	var table Table
+
+// 	if err := tx.First(&table, o.TableID).Error; err != nil {
+// 		return fmt.Errorf("failed to retrieve table: %v", err)
+// 	}
+// 	if !table.Status {
+// 		return fmt.Errorf("%s is already reserved test", table.Name)
+// 	}
+
+// 	if err := updateTableStatus(tx, o.TableID, false); err != nil {
+// 		return fmt.Errorf("failed to update table status: %v", err)
+// 	}
+// 	return nil
+// }
+
+func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
+
+	if o.StatusPayment != OrderInProcess {
 		if err := updateTableStatus(tx, o.TableID, true); err != nil {
 			return fmt.Errorf("failed to update table status: %v", err)
+		}
+	}
+
+	var existingItems []OrderItem
+	if err := tx.Where("order_id = ?", o.ID).Find(&existingItems).Error; err != nil {
+		return fmt.Errorf("failed to retrieve existing order items: %v", err)
+	}
+
+	newItemIDs := make(map[uint]bool)
+	for _, item := range o.OrderItems {
+		newItemIDs[item.ID] = true
+	}
+
+	for _, existingItem := range existingItems {
+		if !newItemIDs[existingItem.ID] {
+			if err := tx.Delete(&existingItem).Error; err != nil {
+				return fmt.Errorf("failed to delete removed order item: %v", err)
+			}
 		}
 	}
 	return nil
@@ -146,6 +199,7 @@ func (oi *OrderItem) AfterUpdate(tx *gorm.DB) (err error) {
 	if err := adjustProductStock(tx, oi.ProductID, -stockDifference); err != nil {
 		return fmt.Errorf("failed to adjust product stock: %v", err)
 	}
+
 	return nil
 }
 

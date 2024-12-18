@@ -12,9 +12,10 @@ type OrderService interface {
 	AllTables(page, limit int) ([]*domain.Table, int64, error)
 	AllPayments() ([]*domain.PaymentMethod, error)
 	CreateOrder(name string, tableID uint, orderItems []domain.OrderItem) error
-	FindByIDOrder(order *domain.OrderDetail, id uint) error
+	FindByIDOrder(order *domain.Order, id string) error
+	FindByIDOrderDetail(order *domain.OrderDetail, id string) error
 	Update(order *domain.Order) error
-	AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error)
+	AllOrders(page, limit int, name, codeOrder string, status domain.StatusPayment) ([]*domain.OrderDetail, int64, error)
 }
 
 type orderService struct {
@@ -65,8 +66,22 @@ func (s *orderService) CreateOrder(name string, tableID uint, orderItems []domai
 	return nil
 }
 
-func (s *orderService) FindByIDOrder(order *domain.OrderDetail, id uint) error {
+func (s *orderService) FindByIDOrder(order *domain.Order, id string) error {
 	if err := s.repo.FindByIDOrder(order, id); err != nil {
+		s.log.Error("Failed to find order", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func (s *orderService) FindByIDOrderDetail(order *domain.OrderDetail, id string) error {
+	if err := s.repo.FindByIDOrderDetail(order, id); err != nil {
+		s.log.Error("Failed to find order", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func (s *orderService) FindByIDTable(table *domain.Table, id string) error {
+	if err := s.repo.FindByIDTable(table, id); err != nil {
 		s.log.Error("Failed to find order", zap.Error(err))
 		return err
 	}
@@ -77,6 +92,15 @@ func (s *orderService) Update(order *domain.Order) error {
 	if order.Name == "" {
 		return errors.New("order name is required")
 	}
+	// if order.PaymentMethodID == nil {
+	// 	return errors.New("order payment method is required")
+	// }
+	if len(order.OrderItems) == 0 {
+		return errors.New("order items cannot be empty")
+	}
+	if !order.Table.Status {
+		return errors.New("table is already reserved")
+	}
 
 	if err := s.repo.Update(order); err != nil {
 		s.log.Error("Failed to update order", zap.Error(err))
@@ -84,7 +108,7 @@ func (s *orderService) Update(order *domain.Order) error {
 	}
 	return nil
 }
-func (s *orderService) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error) {
+func (s *orderService) AllOrders(page, limit int, name, codeOrder string, status domain.StatusPayment) ([]*domain.OrderDetail, int64, error) {
 	orders, totalItems, err := s.repo.AllOrders(page, limit, name, codeOrder, status)
 	if err != nil {
 		return nil, 0, err

@@ -117,7 +117,17 @@ func (repo OrderRepository) AllPayments() ([]*domain.PaymentMethod, error) {
 	return payments, nil
 }
 
-func (repo *OrderRepository) FindByIDOrder(order *domain.OrderDetail, id uint) error {
+func (repo *OrderRepository) FindByIDOrder(order *domain.Order, id string) error {
+	if err := repo.db.First(order, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("order not found")
+		}
+		repo.log.Error("Failed to fetch Order by ID", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func (repo *OrderRepository) FindByIDOrderDetail(order *domain.OrderDetail, id string) error {
 	if err := repo.db.First(order, "order_id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("order not found")
@@ -127,6 +137,7 @@ func (repo *OrderRepository) FindByIDOrder(order *domain.OrderDetail, id uint) e
 	}
 	return nil
 }
+
 func (repo *OrderRepository) FindByIDTable(table *domain.Table, id string) error {
 	if err := repo.db.First(table, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -138,15 +149,18 @@ func (repo *OrderRepository) FindByIDTable(table *domain.Table, id string) error
 	return nil
 }
 
-func (repo *OrderRepository) Update(Order *domain.Order) error {
-	if err := repo.db.Save(Order).Error; err != nil {
-		repo.log.Error("Failed to update Order", zap.Error(err))
-		return err
-	}
-	return nil
+func (repo *OrderRepository) Update(order *domain.Order) error {
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&order)
+		// if err := tx.Model(&order).Where("id = ?", order.ID).Updates(order).Error; err != nil {
+		// 	repo.log.Error("Failed to update Order", zap.Error(err))
+		// 	return err
+		// }
+		return nil
+	})
 }
 
-func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status string) ([]*domain.OrderDetail, int64, error) {
+func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder string, status domain.StatusPayment) ([]*domain.OrderDetail, int64, error) {
 	var orders []*domain.OrderDetail
 	var totalItems int64
 
@@ -158,7 +172,7 @@ func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder, status s
 		query = query.Where("code_order = ?", codeOrder)
 	}
 	if status != "" {
-		query = query.Where("status = ?", status)
+		query = query.Where("status_payment = ?", status)
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {

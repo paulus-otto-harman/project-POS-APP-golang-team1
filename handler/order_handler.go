@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math"
 	"net/http"
 	"project/domain"
 	"project/helper"
@@ -107,24 +108,68 @@ func (ctrl *OrderController) Create(c *gin.Context) {
 	GoodResponseWithData(c, "Order created successfully", http.StatusCreated, nil)
 }
 
-// @Summary Update Category
-// @Description Update an existing category with an optional new icon. If no new icon is provided, the existing icon will be retained.
-// @Tags Categories
-// @Accept  multipart/form-data
+type updateOrderRequest struct {
+	Name            string             `json:"name" binding:"required"`
+	TableID         uint               `json:"table_id" binding:"required"`
+	PaymentMethodID *uint              `json:"payment_method_id" binding:""`
+	StatusPayment   string             `json:"status_payment" binding:""`
+	StatusKitchen   string             `json:"status_kitchen" binding:""`
+	OrderItems      []domain.OrderItem `json:"order_items" binding:"required,dive"`
+}
+
+// @Summary Update Order
+// @Description Update an existing order. Allows updating the name, table ID, payment method, order items, payment status, and kitchen status.
+// @Tags Orders
+// @Accept json
 // @Produce json
-// @Param id path string true "Category ID"
-// @Param name formData string false "Category name"
-// @Param description formData string false "Category description"
-// @Param icon formData file false "New category icon"
-// @Success 200 {object} Response{data=domain.Category} "update success"
-// @Failure 400 {object} Response "invalid input"
-// @Failure 400 {object} Response "file icon is missing"
-// @Failure 404 {object} Response "category not found"
-// @Failure 500 {object} Response "internal server error"
+// @Param id path string true "Order ID"
+// @Param input body updateOrderRequest true "Order Update Input"
+// @Success 200 {object} Response{data=orderResponse} "Order updated successfully"
+// @Failure 400 {object} Response "Invalid input"
+// @Failure 404 {object} Response "Order not found"
+// @Failure 500 {object} Response "Internal server error"
 // @Router /orders/{id} [put]
 func (ctrl *OrderController) Update(c *gin.Context) {
 
-	GoodResponseWithData(c, "update success", http.StatusOK, nil)
+	id := c.Param("id")
+
+	var input domain.Order
+	if err := ctrl.service.FindByIDOrder(&input, id); err != nil {
+		ctrl.logger.Error("Order not found", zap.Error(err))
+		BadResponse(c, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	var request updateOrderRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		ctrl.logger.Error("Invalid input", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	input.Name = request.Name
+	input.TableID = request.TableID
+	input.PaymentMethodID = request.PaymentMethodID
+	input.OrderItems = request.OrderItems
+	input.StatusPayment = domain.StatusPayment(request.StatusPayment)
+	input.StatusKitchen = domain.StatusKitchen(request.StatusKitchen)
+
+	err := ctrl.service.Update(&input)
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var response domain.OrderDetail
+	if err := ctrl.service.FindByIDOrderDetail(&response, id); err != nil {
+		ctrl.logger.Error("Order not found", zap.Error(err))
+		BadResponse(c, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	response.Total = math.Round((response.Total+(response.Total*input.Tax/100))*100) / 100
+
+	GoodResponseWithData(c, "Order updated successfully", http.StatusOK, response)
 }
 
 type orderResponse struct {
@@ -133,6 +178,8 @@ type orderResponse struct {
 	TableName         string              `json:"table_name" example:"Table A"`
 	PaymentMethodName string              `json:"payment_method_name" example:"cash"`
 	OrderItems        []orderItemResponse `json:"order_items"`
+	StatusPayment     string              `json:"status_payment" example:"In Process"`
+	StatusKitchen     string              `json:"status_kitchen" example:"In The Kitchen"`
 	Total             float64             `json:"total" example:"31.99"`
 }
 
@@ -163,7 +210,7 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 	limit, _ := helper.Uint(c.DefaultQuery("limit", "10"))
 	name := c.Query("name")
 	codeOrder := c.Query("code_order")
-	status := c.Query("status")
+	status := domain.StatusPayment(c.Query("status_payment"))
 
 	orders, totalItems, err := ctrl.service.AllOrders(int(page), int(limit), name, codeOrder, status)
 	if err != nil {
@@ -179,4 +226,3 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), orders)
 }
-
