@@ -23,7 +23,7 @@ func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher
 	return &Handler{
 		AuthHandler:          *NewAuthController(service.Auth, logger, rdb, jwt),
 		PasswordResetHandler: *NewPasswordResetController(service, logger),
-		UserHandler:          *NewUserController(service.User, logger),
+		UserHandler:          *NewUserController(service, logger),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),
