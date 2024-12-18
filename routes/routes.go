@@ -22,20 +22,18 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/register", ctx.Ctl.UserHandler.Registration)
-	r.GET("/users", ctx.Ctl.UserHandler.All)
-	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
+	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
+	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
+	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 
 	staffRoutes := r.Group("/staffs")
 	{
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
 		staffRoutes.POST("/", ctx.Ctl.UserHandler.Registration)
 	}
-	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
-	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
-	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
 
 	reservationsRoutes := r.Group("/reservations")
 	{
