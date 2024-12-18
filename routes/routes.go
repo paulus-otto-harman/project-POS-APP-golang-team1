@@ -26,6 +26,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.GET("/users", ctx.Ctl.UserHandler.All)
 	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
 
+	r.Use(ctx.Middleware.Jwt.AuthJWT())
+
 	staffRoutes := r.Group("/staffs")
 	{
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
@@ -34,11 +36,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
-
-	r.Use(ctx.Middleware.Jwt.AuthJWT())
-	r.GET("/staffs", ctx.Middleware.CanAccess("Dashboard"), ctx.Middleware.CanAccess("Categories"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
 
 	reservationsRoutes := r.Group("/reservations")
 	{
