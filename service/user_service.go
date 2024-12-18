@@ -5,13 +5,10 @@ import (
 	"project/domain"
 	"project/helper"
 	"project/repository"
+	"time"
 
 	"github.com/google/uuid"
-
 	"go.uber.org/zap"
-
-	"go.uber.org/zap"
-	"time"
 )
 
 type UserService interface {
@@ -31,11 +28,7 @@ func NewUserService(repo repository.Repository, log *zap.Logger) UserService {
 }
 
 func (s *userService) All(sortField, sortDirection string, page, limit uint) ([]domain.User, int64, error) {
-	return s.repo.User.User.All(sortField, sortDirection, page, limit)
-}
-
-func (s *userService) Get(user domain.User) (*domain.User, error) {
-	return s.repo.User.Get(user)
+	return s.repo.User.All(sortField, sortDirection, page, limit)
 }
 
 func (s *userService) Register(user *domain.User) error {
@@ -66,9 +59,11 @@ func (s *userService) Register(user *domain.User) error {
 			return err
 		}
 	}
-
 	return nil
-	return s.repo.User.Create(user)
+}
+
+func (s *userService) Get(user domain.User) (*domain.User, error) {
+	return s.repo.User.Get(user)
 }
 
 func (s *userService) UpdatePassword(id uuid.UUID, newPassword string) error {

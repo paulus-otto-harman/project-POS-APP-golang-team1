@@ -70,3 +70,16 @@ func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
 	}
 	return users, nil
 }
+
+func (repo UserRepository) GetByEmail(email string) *domain.User {
+	var user domain.User
+	result := repo.db.Where("email =?", email).First(&user)
+	if result.Error == gorm.ErrRecordNotFound {
+		return nil
+	}
+	return &user
+}
+
+func (repo UserRepository) Update(user *domain.User) error {
+	return repo.db.Save(user).Error
+}

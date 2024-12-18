@@ -10,9 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type UserController struct {
@@ -199,7 +196,7 @@ func (ctrl *UserController) Update(c *gin.Context) {
 		return
 	}
 
-	if err = ctrl.service.UpdatePassword(id, newPassword.Password); err != nil {
+	if err = ctrl.service.User.UpdatePassword(id, newPassword.Password); err != nil {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}

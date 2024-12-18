@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -64,9 +66,6 @@ func shuffle(data []byte) {
 		data[i], data[j.Int64()] = data[j.Int64()], data[i]
 	}
 }
-package helper
-
-import "golang.org/x/crypto/bcrypt"
 
 func CheckPassword(inputPassword, storedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(inputPassword))
