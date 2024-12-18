@@ -25,13 +25,13 @@ const (
 )
 
 type Order struct {
-	ID              uint           `gorm:"primaryKey;autoIncrement" json:"id" swaggerignore:"true"`
-	TableID         uint           `gorm:"not null" json:"table_id"`
+	ID              uint           `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	TableID         uint           `gorm:"not null" json:"table_id" example:"1"`
 	Table           Table          `gorm:"foreignKey:TableID;references:ID"`
 	Name            string         `gorm:"size:100" json:"name"`
 	CodeOrder       string         `gorm:"size:50;unique" json:"code_order"`
 	Tax             float64        `gorm:"type:decimal(4,2);not null;default:10.0" json:"tax"`
-	PaymentMethodID uint           `gorm:"default:null" json:"payment_method_id"`
+	PaymentMethodID *uint          `gorm:"default:null" json:"payment_method_id" example:"1"`
 	PaymentMethod   PaymentMethod  `gorm:"foreignKey:PaymentMethodID;references:ID"`
 	StatusPayment   StatusPayment  `gorm:"type:status_payment;default:'In Process'" json:"status_payment" example:"In Process"`
 	StatusKitchen   StatusKitchen  `gorm:"type:status_kitchen;default:'In The Kitchen'" json:"status_kitchen" example:"In The Kitchen"`
@@ -73,159 +73,118 @@ func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
 	return nil
 }
 
-// func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
-// 	var totalSubTotal float64
+func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
+	var table Table
 
-// 	for i, item := range o.OrderItems {
-// 		var product Product
-// 		if err := tx.First(&product, item.ProductID).Error; err != nil {
-// 			return fmt.Errorf("product not found for product_id %d", item.ProductID)
-// 		}
-// 		o.OrderItems[i].SubTotal = product.Price * float64(item.Quantity)
-// 		totalSubTotal += o.OrderItems[i].SubTotal
-// 	}
+	if err := tx.First(&table, o.TableID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve table: %v", err)
+	}
 
-// 	o.Amount = totalSubTotal + (totalSubTotal * o.Tax / 100)
-// 	return nil
-// }
+	if !table.Status {
+		return fmt.Errorf(table.Name + " is already reserved")
+	}
+
+	return nil
+}
+
+func (o *Order) AfterCreate(tx *gorm.DB) (err error) {
+
+	if err := updateTableStatus(tx, o.TableID, false); err != nil {
+		return fmt.Errorf("failed to update table status: %v", err)
+	}
+	return nil
+}
+
+func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
+	if o.StatusPayment == OrderCompleted {
+
+		if err := updateTableStatus(tx, o.TableID, true); err != nil {
+			return fmt.Errorf("failed to update table status: %v", err)
+		}
+	}
+	return nil
+}
+
+func updateTableStatus(tx *gorm.DB, tableID uint, status bool) error {
+	var table Table
+	if err := tx.First(&table, tableID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve table: %v", err)
+	}
+
+	table.Status = status
+	if err := tx.Save(&table).Error; err != nil {
+		return fmt.Errorf("failed to update table status: %v", err)
+	}
+	return nil
+}
 
 type OrderItem struct {
-	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id" swaggerignore:"true"`
-	OrderID   uint      `gorm:"not null" json:"order_id" example:"1"`
-	Order     Order     `gorm:"foreignKey:OrderID;references:ID"`
+	ID        uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	OrderID   uint      `gorm:"not null" json:"order_id" example:"1" swaggerignore:"true"`
+	Order     Order     `gorm:"foreignKey:OrderID;references:ID" swaggerignore:"true"`
 	ProductID uint      `gorm:"not null" json:"product_id" example:"1"`
-	Product   Product   `gorm:"foreignKey:ProductID;references:ID"`
+	Product   Product   `gorm:"foreignKey:ProductID;references:ID" swaggerignore:"true"`
 	Quantity  int       `gorm:"not null" json:"quantity" example:"2"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
 }
 
-// func (oi *OrderItem) BeforeSave(tx *gorm.DB) (err error) {
+func (oi *OrderItem) AfterCreate(tx *gorm.DB) (err error) {
+	if err := adjustProductStock(tx, oi.ProductID, -oi.Quantity); err != nil {
+		return fmt.Errorf("failed: %v", err)
+	}
+	return nil
+}
 
-// 	if oi.Quantity <= 0 {
-// 		return errors.New("quantity must be greater than 0")
-// 	}
-// 	var product Product
-// 	if err := tx.First(&product, oi.ProductID).Error; err != nil {
-// 		return errors.New("product not found")
-// 	}
+func (oi *OrderItem) AfterUpdate(tx *gorm.DB) (err error) {
+	var old OrderItem
+	if err := tx.First(&old, oi.ID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve old order item: %v", err)
+	}
 
-// 	oi.SubTotal = product.Price * float64(oi.Quantity)
-// 	return nil
-// }
+	stockDifference := oi.Quantity - old.Quantity
+	if err := adjustProductStock(tx, oi.ProductID, -stockDifference); err != nil {
+		return fmt.Errorf("failed to adjust product stock: %v", err)
+	}
+	return nil
+}
+
+func (oi *OrderItem) AfterDelete(tx *gorm.DB) (err error) {
+	if err := adjustProductStock(tx, oi.ProductID, oi.Quantity); err != nil {
+		return fmt.Errorf("failed to restore product stock: %v", err)
+	}
+	return nil
+}
+
+func adjustProductStock(tx *gorm.DB, productID uint, quantityChange int) error {
+	var product Product
+	if err := tx.First(&product, productID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve product: %v", err)
+	}
+
+	newStock := product.Stock + quantityChange
+	if newStock < 0 {
+		return fmt.Errorf("insufficient stock for product %s", product.Name)
+	}
+
+	product.Stock = newStock
+	if err := tx.Save(&product).Error; err != nil {
+		return fmt.Errorf("failed to update product stock: %v", err)
+	}
+	return nil
+}
 
 func OrderSeed() []Order {
 	return []Order{
 		{
-			ID:      1,
 			TableID: 1,
 			Name:    "John Doe",
-			// CodeOrder:       "ORD001",
-			Tax:             10.0,
-			PaymentMethodID: 1,
-			StatusPayment:   "In Process",
 			OrderItems: []OrderItem{
 				{
-					// OrderID: 1,
-					ProductID: 1,
-					Quantity:  2,
-				},
-				{
-					// OrderID: 1,
 					ProductID: 2,
-					Quantity:  1,
+					Quantity:  2,
 				},
 			},
 		},
-		// {
-		// 	ID: 2,
-		// 	TableID:         2,
-		// 	Name:            "Alex",
-		// 	// CodeOrder:       "ORD002",
-		// 	Tax:             10.0,
-		// 	PaymentMethodID: 2,
-		// 	StatusPayment:   "Completed",
-		// 	OrderItems: []OrderItem{
-		// 		{
-		// 			OrderID: 2,
-		// 			ProductID: 3,
-		// 			Quantity:  3,
-		// 		},
-		// 		{
-		// 			OrderID: 2,
-		// 			ProductID: 12,
-		// 			Quantity:  3,
-		// 		},
-		// 		{
-		// 			OrderID: 2,
-		// 			ProductID: 6,
-		// 			Quantity:  3,
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	ID: 3,
-		// 	TableID:         3,
-		// 	Name:            "Elia",
-		// 	// CodeOrder:       "ORD003",
-		// 	Tax:             10.0,
-		// 	PaymentMethodID: 3,
-		// 	StatusPayment:   "Cancelled",
-		// 	OrderItems: []OrderItem{
-		// 		{
-		// 			OrderID: 3,
-		// 			ProductID: 4,
-		// 			Quantity:  1,
-		// 		},
-		// 		{
-		// 			OrderID: 3,
-		// 			ProductID: 15,
-		// 			Quantity:  1,
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	ID: 4,
-		// 	TableID:         4,
-		// 	Name:            "Smith",
-		// 	// CodeOrder:       "ORD004",
-		// 	Tax:             10.0,
-		// 	PaymentMethodID: 2,
-		// 	StatusPayment:   "In Process",
-		// 	OrderItems: []OrderItem{
-		// 		{
-		// 			OrderID: 4,
-		// 			ProductID: 5,
-		// 			Quantity:  5,
-		// 		},
-		// 		{
-		// 			OrderID: 4,
-		// 			ProductID: 17,
-		// 			Quantity:  5,
-		// 		},
-		// 		{
-		// 			OrderID: 4,
-		// 			ProductID: 2,
-		// 			Quantity:  5,
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	ID: 5,
-		// 	TableID:         5,
-		// 	Name:            "Bob Brown",
-		// 	// CodeOrder:       "ORD005",
-		// 	Tax:             10.0,
-		// 	PaymentMethodID: 0,
-		// 	StatusPayment:   "Completed",
-		// 	OrderItems: []OrderItem{
-		// 		{
-		// 			OrderID: 5,
-		// 			ProductID: 5,
-		// 			Quantity:  5,
-		// 		},
-		// 	},
-		// },
 	}
-
 }

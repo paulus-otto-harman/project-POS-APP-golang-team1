@@ -43,6 +43,9 @@ func (s *categoryService) Create(category *domain.Category) error {
 	if category.Name == "" {
 		return errors.New("category name is required")
 	}
+	if category.Description == "" {
+		return errors.New("category description is required")
+	}
 
 	return s.repo.Create(category)
 }
@@ -63,8 +66,9 @@ func (s *categoryService) Update(category *domain.Category) error {
 	if category.Name == "" {
 		return errors.New("category name is required")
 	}
+
 	if category.Description == "" {
-		return errors.New("category name is required")
+		return errors.New("category description is required")
 	}
 
 	if err := s.repo.Update(category); err != nil {

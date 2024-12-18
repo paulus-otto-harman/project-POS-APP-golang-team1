@@ -85,6 +85,7 @@ func queryOrderDetail(db *gorm.DB) error {
 	LEFT JOIN payment_methods pm ON o.payment_method_id = pm.id
 	LEFT JOIN order_items oi ON o.id = oi.order_id
 	LEFT JOIN products p ON oi.product_id = p.id
+	WHERE o.deleted_at IS NULL
 	GROUP BY 
     o.id, t.id, t.name, pm.id, pm.name
    	ORDER BY o.id;

@@ -73,26 +73,25 @@ func (ctrl *OrderController) AllPayments(c *gin.Context) {
 	GoodResponseWithData(c, "fetch success", http.StatusOK, payments)
 }
 
-// @Summary Create Category
-// @Description Create a new category with an icon
-// @Tags Categories
-// @Accept  multipart/form-data
+type orderRequest struct {
+	Name       string             `json:"name" binding:"required"`
+	TableID    uint               `json:"table_id" binding:"required"`
+	OrderItems []domain.OrderItem `json:"order_items" binding:"required,dive"`
+}
+
+// @Summary Create Order
+// @Description Create a new order with specified table ID and order items
+// @Tags Orders
+// @Accept  json
 // @Produce json
-// @Param name formData string true "Category name"
-// @Param description formData string false "Category description"
-// @Param icon formData file true "Category icon"
-// @Success 201 {object} Response{data=domain.Category} "create success"
+// @Param input body orderRequest true "Order Input"
+// @Success 201 {object} Response "Order created successfully"
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 500 {object} Response "Internal server error"
-// @Router /categories/create [post]
+// @Router /orders/ [post]
 func (ctrl *OrderController) Create(c *gin.Context) {
 
-	var input struct {
-		Name            string             `json:"name" binding:"required"`
-		TableID         uint               `json:"table_id" binding:"required"`
-		// PaymentMethodID uint               `json:"payment_method_id" binding:"required"`
-		OrderItems      []domain.OrderItem `json:"order_items" binding:"required,dive"`
-	}
+	var input orderRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		BadResponse(c, err.Error(), http.StatusBadRequest)
@@ -122,10 +121,27 @@ func (ctrl *OrderController) Create(c *gin.Context) {
 // @Failure 400 {object} Response "file icon is missing"
 // @Failure 404 {object} Response "category not found"
 // @Failure 500 {object} Response "internal server error"
-// @Router /categories/{id} [put]
+// @Router /orders/{id} [put]
 func (ctrl *OrderController) Update(c *gin.Context) {
 
 	GoodResponseWithData(c, "update success", http.StatusOK, nil)
+}
+
+type orderResponse struct {
+	OrderID           int                 `json:"order_id" example:"1"`
+	Name              string              `json:"name" example:"John Doe"`
+	TableName         string              `json:"table_name" example:"Table A"`
+	PaymentMethodName string              `json:"payment_method_name" example:"cash"`
+	OrderItems        []orderItemResponse `json:"order_items"`
+	Total             float64             `json:"total" example:"31.99"`
+}
+
+type orderItemResponse struct {
+	OrderItemID  uint    `json:"order_item_id" example:"1"`
+	Quantity     int     `json:"quantity" example:"2"`
+	ProductName  string  `json:"product_name" example:"Potato"`
+	ProductPrice float64 `json:"product_price" example:"6.99"`
+	SubTotal     float64 `json:"sub_total" example:"31.99"`
 }
 
 // @Summary Get All Orders
@@ -138,7 +154,7 @@ func (ctrl *OrderController) Update(c *gin.Context) {
 // @Param name query string false "Filter by customer name"
 // @Param code_order query string false "Filter by order code"
 // @Param status query string false "Filter by order status"
-// @Success 200 {object} domain.DataPage{data=[]domain.OrderResponse} "fetch success"
+// @Success 200 {object} domain.DataPage{data=[]orderResponse} "fetch success"
 // @Failure 404 {object} Response "Orders not found"
 // @Failure 500 {object} Response "Internal server error"
 // @Router /orders [get]
@@ -164,30 +180,3 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), orders)
 }
 
-// func (ctrl *OrderController) formatOrderResponse(orders []*domain.Order) []*domain.OrderResponse {
-// 	response := make([]*domain.OrderResponse, len(orders))
-// 	for i, order := range orders {
-// 		totalSubTotal := 0.0
-// 		orderItems := make([]*domain.OrderItemResponse, len(order.OrderItems))
-// 		for j, item := range order.OrderItems {
-// 			orderItems[j] = &domain.OrderItemResponse{
-// 				ProductName: item.Product.Name,
-// 				Quantity:    item.Quantity,
-// 				SubTotal:    item.SubTotal,
-// 				Status:      item.Status,
-// 			}
-// 			totalSubTotal += item.SubTotal
-// 		}
-// 		response[i] = &domain.OrderResponse{
-// 			Name:          order.Name,
-// 			CodeOrder:     order.CodeOrder,
-// 			Status:        order.Status,
-// 			OrderDate:     order.CreatedAt.Format("2006-01-02"),
-// 			OrderTime:     order.CreatedAt.Format("15:04:05"),
-// 			TableName:     order.Table.Name,
-// 			OrderItems:    orderItems,
-// 			TotalSubTotal: math.Round(totalSubTotal*100) / 100,
-// 		}
-// 	}
-// 	return response
-// }

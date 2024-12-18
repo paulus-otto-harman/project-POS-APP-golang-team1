@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"log"
 	"project/domain"
 	"project/repository"
 
@@ -50,19 +49,15 @@ func (s *orderService) AllPayments() ([]*domain.PaymentMethod, error) {
 	return payments, nil
 }
 func (s *orderService) CreateOrder(name string, tableID uint, orderItems []domain.OrderItem) error {
-	// codeOrder, err := s.repo.GenerateCodeOrder()
-	// if err != nil {
-	// 	return err
-	// }
-	// log.Println(codeOrder,"service<<<<<")
-	order := &domain.Order{
-		Name:            name,
-		TableID:         tableID,
-		// CodeOrder:       codeOrder,
-		OrderItems:      orderItems,
+	if len(orderItems) == 0 {
+		return errors.New("order items cannot be empty")
 	}
-	log.Println(order.CodeOrder,"service>>>>>")
-	
+	order := &domain.Order{
+		Name:       name,
+		TableID:    tableID,
+		OrderItems: orderItems,
+	}
+
 	if err := s.repo.Create(order); err != nil {
 		return err
 	}
