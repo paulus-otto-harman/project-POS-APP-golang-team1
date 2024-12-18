@@ -140,7 +140,8 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 	if file != nil {
 		newPhotoProfileURL, err := ctrl.service.Category.UploadIcon(file, filename)
 		if err != nil {
-			BadResponse(c, "Failed to upload new icon: "+err.Error(), http.StatusInternalServerError)
+			ctrl.logger.Error("Failed to upload file", zap.Error(err))
+			BadResponse(c, "Failed to upload new photo profile: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		user.ProfilePhoto = newPhotoProfileURL
@@ -183,7 +184,7 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 	GoodResponseWithData(c, "user registered", http.StatusCreated, user)
 }
 
-func (ctrl *UserController) Update(c *gin.Context) {
+func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		BadResponse(c, "invalid parameter", http.StatusBadRequest)
@@ -207,4 +208,93 @@ func (ctrl *UserController) Update(c *gin.Context) {
 type NewPassword struct {
 	Password        string `binding:"required" json:"password"`
 	ConfirmPassword string `binding:"required,eqfield=Password" json:"confirm_password"`
+}
+
+func (ctrl *UserController) Delete(c *gin.Context) {
+	userID, err := helper.Uint(c.Param("id"))
+	if err != nil {
+		ctrl.logger.Error("invalid parameter", zap.Error(err))
+		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
+		return
+	}
+
+	err = ctrl.service.User.Delete(userID)
+	if err != nil {
+		ctrl.logger.Error("Fail to delete user", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "User deleted", http.StatusOK, nil)
+}
+
+func (ctrl *UserController) Update(c *gin.Context) {
+	var userInput domain.User
+	var file multipart.File
+	var fileHeader *multipart.FileHeader
+	var filename string
+	var err error
+
+	userID, err := helper.Uint(c.Param("id"))
+	if err != nil {
+		ctrl.logger.Error("invalid parameter", zap.Error(err))
+		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
+		return
+	}
+	userInput.ID = userID
+
+	fileHeader, err = c.FormFile("profile_picture")
+	if err == nil {
+
+		file, err = fileHeader.Open()
+		if err != nil {
+			ctrl.logger.Error("Failed to open file", zap.Error(err))
+			BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		filename = fileHeader.Filename
+		ctrl.logger.Info("Received new file", zap.String("filename", filename))
+	}
+	if fileHeader == nil {
+		ctrl.logger.Error("File profile photo is missing")
+		BadResponse(c, "File profile photo is required", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		ctrl.logger.Error("Failed to get file from request", zap.Error(err))
+		BadResponse(c, "Failed get data: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	birthDateStr := c.PostForm("birth_date")
+	if birthDateStr == "" {
+		ctrl.logger.Error("Birth date is required")
+		BadResponse(c, "Birth date is required", http.StatusBadRequest)
+		return
+	}
+	userInput.BirthDate = helper.MonthDate(birthDateStr)
+	if err := c.ShouldBind(&userInput); err != nil {
+		ctrl.logger.Error("Failed to bind JSON", zap.Error(err))
+		BadResponse(c, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if file != nil {
+		newPhotoProfileURL, err := ctrl.service.Category.UploadIcon(file, filename)
+		if err != nil {
+			ctrl.logger.Error("Failed to upload new photo profile", zap.Error(err))
+			BadResponse(c, "Failed to upload new photo profile: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		userInput.ProfilePhoto = newPhotoProfileURL
+	}
+
+	err = ctrl.service.User.Update(userInput)
+	if err != nil {
+		ctrl.logger.Error("Fail to update user", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "User updated", http.StatusOK, nil)
 }

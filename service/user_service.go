@@ -16,6 +16,8 @@ type UserService interface {
 	Get(user domain.User) (*domain.User, error)
 	Register(user *domain.User) error
 	UpdatePassword(id uuid.UUID, newPassword string) error
+	Delete(id uint) error
+	Update(user domain.User) error
 }
 
 type userService struct {
@@ -90,4 +92,17 @@ func (s *userService) UpdatePassword(id uuid.UUID, newPassword string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *userService) Delete(id uint) error {
+	return s.repo.User.Delete(id)
+}
+
+func (s *userService) Update(user domain.User) error {
+	existedUser := s.repo.User.GetByEmail(user.Email)
+	if existedUser != nil && existedUser.ID != user.ID {
+		return errors.New("user email already exists")
+	}
+
+	return s.repo.User.Update(&user)
 }
