@@ -8,6 +8,10 @@ import (
 	"project/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
@@ -180,4 +184,30 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 	}
 
 	GoodResponseWithData(c, "user registered", http.StatusCreated, user)
+}
+
+func (ctrl *UserController) Update(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		BadResponse(c, "invalid parameter", http.StatusBadRequest)
+		return
+	}
+
+	var newPassword NewPassword
+	if err = c.ShouldBindJSON(&newPassword); err != nil {
+		BadResponse(c, "invalid password", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err = ctrl.service.UpdatePassword(id, newPassword.Password); err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	GoodResponseWithData(c, "password changed", http.StatusOK, nil)
+}
+
+type NewPassword struct {
+	Password        string `binding:"required" json:"password"`
+	ConfirmPassword string `binding:"required,eqfield=Password" json:"confirm_password"`
 }

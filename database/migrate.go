@@ -26,31 +26,43 @@ func Migrate(db *gorm.DB) error {
 
 func autoMigrates(db *gorm.DB) error {
 	return db.AutoMigrate(
+		&domain.Permission{},
 		&domain.User{},
 		&domain.Reservation{},
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.Profile{},
+		&domain.PasswordResetToken{},
 	)
 }
 
 func dropTables(db *gorm.DB) error {
 	return db.Migrator().DropTable(
+		&domain.PasswordResetToken{},
+		&domain.Profile{},
 		&domain.User{},
 		&domain.Reservation{},
 		&domain.Notification{},
 		&domain.Category{},
 		&domain.Product{},
+		&domain.Permission{},
+		"user_permissions",
 		&domain.UserNotification{},
 	)
 }
 
 func setupJoinTables(db *gorm.DB) error {
-	err := db.SetupJoinTable(&domain.User{}, "Notifications", &domain.UserNotification{})
-	if err != nil {
+	var err error
+	if err = db.SetupJoinTable(&domain.User{}, "Permissions", &domain.UserPermission{}); err != nil {
 		return err
 	}
-	return nil
+
+
+	if err = db.SetupJoinTable(&domain.User{}, "Notifications", &domain.UserNotification{}); err != nil {
+		return err
+	}
+	return err
 }
 
 func createViews(db *gorm.DB) error {

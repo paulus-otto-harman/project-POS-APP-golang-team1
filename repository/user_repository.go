@@ -56,6 +56,12 @@ func (repo UserRepository) All(sortField, sortDirection string, page, limit uint
 	return users, count, nil
 }
 
+func (repo UserRepository) Get(criteria domain.User) (*domain.User, error) {
+	var user domain.User
+	err := repo.db.Preload("Permissions").Where(criteria).First(&user).Error
+	return &user, err
+}
+
 func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
 	var users []domain.User
 	result := repo.db.Where("role =?", role).Find(&users)
@@ -63,13 +69,4 @@ func (repo UserRepository) GetByRole(role string) ([]domain.User, error) {
 		return nil, errors.New("users not found")
 	}
 	return users, nil
-}
-
-func (repo UserRepository) GetByEmail(email string) *domain.User {
-	var user domain.User
-	result := repo.db.Where("email =?", email).First(&user)
-	if result.Error == gorm.ErrRecordNotFound {
-		return nil
-	}
-	return &user
 }

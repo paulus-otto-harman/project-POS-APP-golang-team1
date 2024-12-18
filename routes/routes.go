@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,14 @@ func NewRoutes(ctx infra.ServiceContext) {
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
 		staffRoutes.POST("/", ctx.Ctl.UserHandler.Registration)
 	}
+	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
+	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
+	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
+
+	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.GET("/staffs", ctx.Middleware.CanAccess("Dashboard"), ctx.Middleware.CanAccess("Categories"), func(c *gin.Context) {
+		c.JSON(200, gin.H{"hello": "world"})
+	})
 
 	reservationsRoutes := r.Group("/reservations")
 	{
@@ -59,19 +68,18 @@ func NewRoutes(ctx infra.ServiceContext) {
 }
 
 func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
-	const ShutdownTimeout = 5
-
 	srv := &http.Server{
 		Addr:    ctx.Cfg.ServerPort,
 		Handler: handler,
 	}
 
+	if ctx.Cfg.ShutdownTimeout == 0 {
+		launchServer(srv, ctx.Cfg.ServerPort)
+		return
+	}
+
 	go func() {
-		// service connections
-		log.Println("Listening and serving HTTP on", ctx.Cfg.ServerPort)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
+		launchServer(srv, ctx.Cfg.ServerPort)
 	}()
 
 	// Wait for interrupt signal to gracefully shut down the server with
@@ -83,8 +91,7 @@ func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutdown Server ...")
-
-	appContext, cancel := context.WithTimeout(context.Background(), ShutdownTimeout*time.Second)
+	appContext, cancel := context.WithTimeout(context.Background(), time.Duration(ctx.Cfg.ShutdownTimeout)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(appContext); err != nil {
 		log.Fatal("Server Shutdown:", err)
@@ -92,7 +99,15 @@ func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
 	// catching appContext.Done(). timeout of ShutdownTimeout seconds.
 	select {
 	case <-appContext.Done():
-		log.Println(fmt.Sprintf("timeout of %d seconds.", ShutdownTimeout))
+		log.Println(fmt.Sprintf("timeout of %d seconds.", ctx.Cfg.ShutdownTimeout))
 	}
 	log.Println("Server exiting")
+}
+
+func launchServer(server *http.Server, port string) {
+	// service connections
+	log.Println("Listening and serving HTTP on", port)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalf("listen: %s\n", err)
+	}
 }

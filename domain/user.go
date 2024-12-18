@@ -33,23 +33,8 @@ type User struct {
 	UpdatedAt         time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
 
+	Profile             Profile              `json:"profile"`
+	Permissions         []Permission         `gorm:"many2many:user_permissions;" json:"permissions"`
 	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:Email;references:Email" json:"-"`
 	Notifications       []Notification       `gorm:"many2many:user_notifications" json:"user_notifications"` // Reference the join table
-}
-
-func UserSeed() []User {
-	return []User{
-		{
-			FullName: "Super Admin",
-			Email:    "admin@mail.com",
-			Password: "admin",
-			Role:     "admin",
-		},
-		{
-			FullName: "Staf Satu",
-			Email:    "staf@mail.com",
-			Password: "staf",
-			Role:     "staff",
-		},
-	}
 }

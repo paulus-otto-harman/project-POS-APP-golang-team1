@@ -64,3 +64,16 @@ func shuffle(data []byte) {
 		data[i], data[j.Int64()] = data[j.Int64()], data[i]
 	}
 }
+package helper
+
+import "golang.org/x/crypto/bcrypt"
+
+func CheckPassword(inputPassword, storedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(inputPassword))
+	return err == nil
+}
+
+func HashPassword(password string) string {
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes)
+}
