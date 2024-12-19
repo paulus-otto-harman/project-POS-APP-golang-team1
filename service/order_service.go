@@ -16,6 +16,7 @@ type OrderService interface {
 	FindByIDOrderDetail(order *domain.OrderDetail, id string) error
 	Update(order *domain.Order) error
 	AllOrders(page, limit int, name, codeOrder string, status domain.StatusPayment) ([]*domain.OrderDetail, int64, error)
+	Delete(order *domain.Order) error
 }
 
 type orderService struct {
@@ -98,9 +99,12 @@ func (s *orderService) Update(order *domain.Order) error {
 	if len(order.OrderItems) == 0 {
 		return errors.New("order items cannot be empty")
 	}
-	if !order.Table.Status {
-		return errors.New("table is already reserved")
-	}
+	// if !order.Table.Status {
+	// 	return errors.New("table is already reserved")
+	// }
+	// if order.StatusPayment != domain.OrderInProcess {
+	// 	return errors.New("Order cannot be deleted because the payment status is not 'In Process'. current status payment: "+string(order.StatusPayment))
+	// }
 
 	if err := s.repo.Update(order); err != nil {
 		s.log.Error("Failed to update order", zap.Error(err))
@@ -118,4 +122,12 @@ func (s *orderService) AllOrders(page, limit int, name, codeOrder string, status
 	}
 
 	return orders, int64(totalItems), nil
+}
+
+func (s *orderService) Delete(order *domain.Order) error {
+	if err := s.repo.Delete(order); err != nil {
+		s.log.Error("Failed to delete order", zap.Error(err))
+		return err
+	}
+	return nil
 }

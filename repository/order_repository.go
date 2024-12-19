@@ -196,3 +196,13 @@ func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder string, s
 
 	return orders, totalItems, nil
 }
+
+func (repo *OrderRepository) Delete(order *domain.Order) error {
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&order, order.ID).Error; err != nil {
+			repo.log.Error("Error deleting notification", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+}

@@ -113,29 +113,32 @@ func (o *Order) BeforeUpdate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-// func (o *Order) AfterCreate(tx *gorm.DB) (err error) {
-
-// 	var table Table
-
-// 	if err := tx.First(&table, o.TableID).Error; err != nil {
-// 		return fmt.Errorf("failed to retrieve table: %v", err)
-// 	}
-// 	if !table.Status {
-// 		return fmt.Errorf("%s is already reserved test", table.Name)
-// 	}
-
-// 	if err := updateTableStatus(tx, o.TableID, false); err != nil {
-// 		return fmt.Errorf("failed to update table status: %v", err)
-// 	}
-// 	return nil
-// }
-
 func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
 
 	if o.StatusPayment != OrderInProcess {
 		if err := updateTableStatus(tx, o.TableID, true); err != nil {
 			return fmt.Errorf("failed to update table status: %v", err)
 		}
+	}
+	if o.StatusPayment == OrderCancelled {
+		var oldOrder Order
+		if err := tx.Unscoped().First(&oldOrder, o.ID).Error; err != nil {
+			return fmt.Errorf("failed to retrieve old order: %v", err)
+		}
+
+		if oldOrder.StatusPayment != OrderCancelled {
+			var orderItems []OrderItem
+			if err := tx.Where("order_id = ?", o.ID).Find(&orderItems).Error; err != nil {
+				return fmt.Errorf("failed to retrieve order items for cancelled order: %v", err)
+			}
+
+			for _, item := range orderItems {
+				if err := adjustProductStock(tx, item.ProductID, item.Quantity); err != nil {
+					return fmt.Errorf("failed to restore stock for product ID %d: %v", item.ProductID, err)
+				}
+			}
+		}
+
 	}
 
 	var existingItems []OrderItem
@@ -153,6 +156,20 @@ func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
 			if err := tx.Delete(&existingItem).Error; err != nil {
 				return fmt.Errorf("failed to delete removed order item: %v", err)
 			}
+		}
+	}
+	return nil
+}
+
+func (o *Order) AfterDelete(tx *gorm.DB) (err error) {
+	var orderItems []OrderItem
+	if err := tx.Where("order_id = ?", o.ID).Find(&orderItems).Error; err != nil {
+		return fmt.Errorf("failed to retrieve order items for deleted order: %v", err)
+	}
+
+	for _, item := range orderItems {
+		if err := adjustProductStock(tx, item.ProductID, item.Quantity); err != nil {
+			return fmt.Errorf("failed to restore stock for product ID %d: %v", item.ProductID, err)
 		}
 	}
 	return nil

@@ -70,6 +70,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
 		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
 		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
+		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
 

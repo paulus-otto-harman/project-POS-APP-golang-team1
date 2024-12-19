@@ -226,3 +226,39 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), orders)
 }
+
+// @Summary Delete Order
+// @Description Delete an order by ID if the payment status is 'In Process'
+// @Tags Orders
+// @Accept  json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Success 200 {object} Response "Delete success"
+// @Failure 400 {object} Response "Order cannot be deleted because the payment status is not 'In Process'"
+// @Failure 404 {object} Response "Order not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /orders/{id} [delete]
+func (ctrl *OrderController) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	var order domain.Order
+	if err := ctrl.service.FindByIDOrder(&order, id); err != nil {
+		ctrl.logger.Error("Order not found", zap.Error(err))
+		BadResponse(c, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	if order.StatusPayment != domain.OrderInProcess {
+		ctrl.logger.Error( "Order cannot be deleted because the payment status is not 'In Process'.", zap.String("status_payment: ", string(order.StatusPayment)))
+		BadResponse(c, "Order cannot be deleted because the payment status is not 'In Process'. current status payment: "+string(order.StatusPayment), http.StatusBadRequest)
+		return
+	}
+
+	if err := ctrl.service.Delete(&order); err != nil {
+		ctrl.logger.Error("failed deleted", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "Delete success", http.StatusOK, nil)
+
+}
