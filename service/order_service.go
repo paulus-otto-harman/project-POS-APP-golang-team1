@@ -13,6 +13,7 @@ type OrderService interface {
 	AllPayments() ([]*domain.PaymentMethod, error)
 	CreateOrder(name string, tableID uint, orderItems []domain.OrderItem) error
 	FindByIDOrder(order *domain.Order, id string) error
+	// FindByIDTable(table *domain.Table, id string) error
 	FindByIDOrderDetail(order *domain.OrderDetail, id string) error
 	Update(order *domain.Order) error
 	AllOrders(page, limit int, name, codeOrder string, status domain.StatusPayment) ([]*domain.OrderDetail, int64, error)
@@ -81,30 +82,19 @@ func (s *orderService) FindByIDOrderDetail(order *domain.OrderDetail, id string)
 	}
 	return nil
 }
-func (s *orderService) FindByIDTable(table *domain.Table, id string) error {
-	if err := s.repo.FindByIDTable(table, id); err != nil {
-		s.log.Error("Failed to find order", zap.Error(err))
-		return err
-	}
-	return nil
-}
+// func (s *orderService) FindByIDTable(table *domain.Table, id string) error {
+// 	if err := s.repo.FindByIDTable(table, id); err != nil {
+// 		s.log.Error("Failed to find order", zap.Error(err))
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (s *orderService) Update(order *domain.Order) error {
-	if order.Name == "" {
-		return errors.New("order name is required")
-	}
-	// if order.PaymentMethodID == nil {
-	// 	return errors.New("order payment method is required")
-	// }
+
 	if len(order.OrderItems) == 0 {
 		return errors.New("order items cannot be empty")
 	}
-	// if !order.Table.Status {
-	// 	return errors.New("table is already reserved")
-	// }
-	// if order.StatusPayment != domain.OrderInProcess {
-	// 	return errors.New("Order cannot be deleted because the payment status is not 'In Process'. current status payment: "+string(order.StatusPayment))
-	// }
 
 	if err := s.repo.Update(order); err != nil {
 		s.log.Error("Failed to update order", zap.Error(err))

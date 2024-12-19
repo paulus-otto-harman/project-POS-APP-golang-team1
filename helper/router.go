@@ -11,3 +11,8 @@ func Uint(param string) (uint, error) {
 	}
 	return uint(i), nil
 }
+
+func IntToString(num int) string {
+	convStr := strconv.Itoa(num)
+	return convStr
+}
