@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"project/infra"
 
 	"github.com/robfig/cron/v3"
 )
@@ -9,18 +11,21 @@ import (
 func main() {
 	// Membuat instance cron
 	c := cron.New()
-	// Menambahkan job untuk membuat laporan setiap hari pukul 9 pagi
-	_, err := c.AddFunc("*/2 * * * *", func() {
-		//
-	})
-
+	ctx, err := infra.NewServiceContext()
 	/*
 		TODO:
 		- add notification low stock to cron job hourly
 	*/
+	if err != nil {
+		log.Fatal("can't init service context %w", err)
+	}
+
+	_, err = c.AddFunc("@weekly", func() {
+		ctx.Ctl.UserHandler.UpdateShiftSchedule()
+	})
 
 	if err != nil {
-		fmt.Println("Error menambahkan cron job:", err)
+		fmt.Println("Error update shift schedule from cron:", err)
 		return
 	}
 	// Menjalankan cron

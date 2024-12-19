@@ -20,6 +20,7 @@ type UserService interface {
 	Delete(id uint) error
 	Update(user domain.User) error
 	GetByID(userInput domain.User) (*domain.User, error)
+	UpdateShift() error
 }
 
 type userService struct {
@@ -122,4 +123,50 @@ func (s *userService) GetByID(userInput domain.User) (*domain.User, error) {
 	}
 	user.Permissions = nil
 	return user, nil
+}
+
+func (s *userService) UpdateShift() error {
+	// Define the shift schedule
+	shiftSchedule := []Shift{
+		{StartTime: "9am", EndTime: "6pm"},
+		{StartTime: "2pm", EndTime: "11pm"},
+	}
+
+	// Retrieve all users
+	users, _, err := s.repo.User.All("", "", 0, 0)
+	if err != nil {
+		return err
+	}
+
+	// Loop through users to update their shifts
+	for _, user := range users {
+		// Check the current shift of the user and update accordingly
+		switch user.ShiftStart {
+		case shiftSchedule[0].StartTime:
+			user.ShiftStart = shiftSchedule[1].StartTime
+			user.ShiftEnd = shiftSchedule[1].EndTime
+		case shiftSchedule[1].StartTime:
+			user.ShiftStart = shiftSchedule[0].StartTime
+			user.ShiftEnd = shiftSchedule[0].EndTime
+		default:
+			// Default to the first shift schedule if the user's shift doesn't match
+			user.ShiftStart = shiftSchedule[0].StartTime
+			user.ShiftEnd = shiftSchedule[0].EndTime
+		}
+
+		// Update the user in the repository
+		err = s.repo.User.Update(&user)
+		if err != nil {
+			// Log the error and return
+			s.log.Error("Error updating user shift", zap.Error(err), zap.Uint("user_id", user.ID))
+			return err
+		}
+	}
+
+	return nil
+}
+
+type Shift struct {
+	StartTime string
+	EndTime   string
 }

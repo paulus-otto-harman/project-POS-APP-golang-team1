@@ -314,3 +314,11 @@ func (ctrl *UserController) GetByID(c *gin.Context) {
 	}
 	GoodResponseWithData(c, "User retrieved", http.StatusOK, user)
 }
+
+func (ctrl *UserController) UpdateShiftSchedule() {
+	err := ctrl.service.User.UpdateShift()
+	if err != nil {
+		ctrl.logger.Error("Fail to update user shift schedule", zap.Error(err))
+		return
+	}
+}
