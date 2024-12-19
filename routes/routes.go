@@ -24,16 +24,13 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
-	r.PUT("/user/:id", ctx.Ctl.UserHandler.Update)
-
-	r.Use(ctx.Middleware.Jwt.AuthJWT())
-	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
-
-	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
-	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
+	r.PUT("/profile", ctx.Ctl.UserHandler.Update)
+	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
+	r.PUT("/users/:id/permissions", ctx.Middleware.OnlySuperAdmin(), nil)
 
 	staffRoutes := r.Group("/staffs")
 	{
