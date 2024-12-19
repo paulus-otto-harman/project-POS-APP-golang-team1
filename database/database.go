@@ -12,8 +12,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
-
 func ConnectDB(cfg config.Config) (*gorm.DB, error) {
 	// Configure the database logger
 	newLogger := logger.New(
@@ -34,7 +32,9 @@ func ConnectDB(cfg config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
-	createCustomDBTypes(db)
+	if err = createCustomDBTypes(db); err != nil {
+		return nil, err
+	}
 
 	// Call Migrate function to auto-migrate database schemas
 	if cfg.DB.Migrate {
@@ -61,6 +61,32 @@ func makePostgresString(cfg config.Config) string {
 		cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Name, cfg.DB.Password)
 }
 
-func createCustomDBTypes(db *gorm.DB) {
-	
+
+func createCustomDBTypes(db *gorm.DB) error {
+  var err error
+  
+	if err = db.Exec(`
+		DO $$ BEGIN CREATE TYPE status_payment AS ENUM ('In Process', 'Completed', 'Cancelled');
+		EXCEPTION WHEN duplicate_object THEN null; END $$;
+	`); err != nil {
+    return err
+  }
+  
+  
+	if err = db.Exec(`
+		DO $$ BEGIN CREATE TYPE status_kitchen AS ENUM ('In The Kitchen', 'Cooking Now', 'Ready To Serve');
+		EXCEPTION WHEN duplicate_object THEN null; END $$;
+	`); err != nil {
+    return err
+  }
+
+	if err = db.Exec(`
+		DO $$ BEGIN CREATE TYPE user_role AS ENUM('super admin', 'admin', 'staff');
+		EXCEPTION WHEN duplicate_object THEN null; END $$;
+	`); err != nil {
+    return err
+  }
+  
+  return nil
+
 }

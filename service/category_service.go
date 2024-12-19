@@ -43,6 +43,9 @@ func (s *categoryService) Create(category *domain.Category) error {
 	if category.Name == "" {
 		return errors.New("category name is required")
 	}
+	if category.Description == "" {
+		return errors.New("category description is required")
+	}
 
 	return s.repo.Create(category)
 }
@@ -60,18 +63,28 @@ func (s *categoryService) UploadIcon(file io.Reader, filename string) (string, e
 }
 
 func (s *categoryService) Update(category *domain.Category) error {
+	if category.Name == "" {
+		return errors.New("category name is required")
+	}
+
+	if category.Description == "" {
+		return errors.New("category description is required")
+	}
+
 	if err := s.repo.Update(category); err != nil {
 		s.log.Error("Failed to update category", zap.Error(err))
 		return err
 	}
 	return nil
 }
+
 func (s *categoryService) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
 
 	products, totalItems, err := s.repo.AllProducts(page, limit, categoryID)
 	if err != nil {
 		return nil, 0, err
 	}
+  
 	if len(products) == 0 {
 		return nil, int64(totalItems), errors.New("products not found")
 	}

@@ -23,13 +23,18 @@ type Product struct {
 }
 
 func (v *Product) BeforeSave(tx *gorm.DB) (err error) {
-	if v.Stock > 5 {
-		v.Availability = "In Stock"
-	} else if v.Stock > 0 && v.Stock <= 5 {
-		v.Availability = "Low Stock"
-	} else {
+  v.Availability = "In Stock"
+
+	if v.Stock == 0 {
 		v.Availability = "Out Of Stock"
+		return nil
 	}
+
+	if v.Stock <= 5 {
+		v.Availability = "Low Stock"
+		return nil
+	}
+
 	return nil
 }
 

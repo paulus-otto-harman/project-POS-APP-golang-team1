@@ -110,6 +110,11 @@ func (ctrl *CategoryController) Create(c *gin.Context) {
 	}
 
 	if err := ctrl.service.Create(&category); err != nil {
+		if err.Error() == "category name is required" || err.Error() == "category description is required" {
+			ctrl.logger.Error("Failed to create category", zap.Error(err))
+			BadResponse(c, "Failed to create category: "+err.Error(), http.StatusBadRequest)
+			return
+		}
 		ctrl.logger.Error("Failed to create category", zap.Error(err))
 		BadResponse(c, "Failed to create category: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -180,7 +185,7 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 
 	if err := ctrl.service.Update(&category); err != nil {
 		ctrl.logger.Error("Failed to update category", zap.Error(err))
-		BadResponse(c, "Failed to update category: "+err.Error(), http.StatusInternalServerError)
+		BadResponse(c, "Failed to update category: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 

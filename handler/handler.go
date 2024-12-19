@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"project/database"
 	"project/domain"
+	"project/infra/jwt"
 	"project/service"
 
 	"github.com/gin-gonic/gin"
@@ -16,17 +18,19 @@ type Handler struct {
 	NotificationHandler  NotificationController
 	CategoryHandler      CategoryController
 	ProductHandler       ProductController
+	OrderHandler         OrderController
 }
 
-func NewHandler(service service.Service, logger *zap.Logger) *Handler {
+func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher, jwt jwt.JWT) *Handler {
 	return &Handler{
-		AuthHandler:          *NewAuthController(service.Auth, logger),
-		PasswordResetHandler: *NewPasswordResetController(service.PasswordReset, logger),
-		UserHandler:          *NewUserController(service.User, logger),
+		AuthHandler:          *NewAuthController(service.Auth, logger, rdb, jwt),
+		PasswordResetHandler: *NewPasswordResetController(service, logger),
+		UserHandler:          *NewUserController(service, logger),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),
 		ProductHandler:       *NewProductController(service.Product, logger),
+		OrderHandler:         *NewOrderController(service.Order, logger),
 	}
 }
 
