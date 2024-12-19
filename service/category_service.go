@@ -16,7 +16,7 @@ type CategoryService interface {
 	FindByID(category *domain.Category, id string) error
 	Update(category *domain.Category) error
 	UploadIcon(file io.Reader, filename string) (string, error)
-	AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error)
+	AllProducts(page, limit int, categoryID string) ([]*domain.Inventory, int64, error)
 }
 
 type categoryService struct {
@@ -66,7 +66,7 @@ func (s *categoryService) Update(category *domain.Category) error {
 	}
 	return nil
 }
-func (s *categoryService) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
+func (s *categoryService) AllProducts(page, limit int, categoryID string) ([]*domain.Inventory, int64, error) {
 
 	products, totalItems, err := s.repo.AllProducts(page, limit, categoryID)
 	if err != nil {
