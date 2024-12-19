@@ -16,7 +16,7 @@ type Repository struct {
 	Notification     NotificationRepository
 	Category         CategoryRepository
 	UserNotification UserNotificationRepository
-	Inventory        InventoryRepository
+	Product          ProductRepository
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -28,6 +28,6 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Notification:     *NewNotificationRepository(db, log),
 		Category:         *NewCategoryRepository(db, log),
 		UserNotification: *NewUserNotificationRepository(db, log),
-		Inventory:        *NewInventoryRepository(db, log),
+		Product:          *NewProductRepository(db, log),
 	}
 }

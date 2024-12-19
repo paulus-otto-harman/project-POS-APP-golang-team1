@@ -67,10 +67,10 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	inventoryRoutes := r.Group("/inventory")
 	{
-		inventoryRoutes.GET("/", ctx.Ctl.InventoryHandler.All)
-		inventoryRoutes.POST("/", ctx.Ctl.InventoryHandler.Add)
-		inventoryRoutes.PUT("/:id", ctx.Ctl.InventoryHandler.Update)
-		inventoryRoutes.DELETE("/:id", ctx.Ctl.InventoryHandler.Delete)
+		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
+		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
+		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
+		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

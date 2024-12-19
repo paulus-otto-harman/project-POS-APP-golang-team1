@@ -11,33 +11,33 @@ import (
 	"go.uber.org/zap"
 )
 
-type InventoryController struct {
-	service service.InventoryService
+type ProductController struct {
+	service service.ProductService
 	logger  *zap.Logger
 }
 
-func NewInventoryController(service service.InventoryService, logger *zap.Logger) *InventoryController {
-	return &InventoryController{service: service, logger: logger}
+func NewProductController(service service.ProductService, logger *zap.Logger) *ProductController {
+	return &ProductController{service: service, logger: logger}
 }
 
-// @Summary Get All Inventory
-// @Description Retrieve a list of inventory with filters and pagination
-// @Tags Inventory
+// @Summary Get All product
+// @Description Retrieve a list of product with filters and pagination
+// @Tags product
 // @Accept  json
 // @Produce json
 // @Param page query int false "Page number, default is 1"
 // @Param limit query int false "Number of items per page, default is 10"
 // @Param product_status query string false "Product status: 'Active' or 'Inactive'"
-// @Param category_name query string false "Category name to filter inventory"
+// @Param category_name query string false "Category name to filter product"
 // @Param stock query string false "Stock status: 'In Stock' or 'Out Of Stock'"
 // @Param quantity query int false "Specific product quantity"
 // @Param min_price query float64 false "Minimum price filter"
 // @Param max_price query float64 false "Maximum price filter"
-// @Success 200 {object} domain.DataPage{data=[]domain.Inventory} "Fetch success"
-// @Failure 404 {object} Response "Inventory not found"
+// @Success 200 {object} domain.DataPage{data=[]domain.product} "Fetch success"
+// @Failure 404 {object} Response "product not found"
 // @Failure 500 {object} Response "Internal server error"
-// @Router /inventory/ [get]
-func (ctrl *InventoryController) All(c *gin.Context) {
+// @Router /product/ [get]
+func (ctrl *ProductController) All(c *gin.Context) {
 	// Ambil query parameter dengan nilai default jika kosong
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
 	limit, _ := helper.Uint(c.DefaultQuery("limit", "10"))
@@ -88,7 +88,7 @@ func (ctrl *InventoryController) All(c *gin.Context) {
 // @Failure 404 {object} Response "Category not found"
 // @Failure 500 {object} Response "Internal Server Error"
 // @Router /inventory/ [post]
-func (ctrl *InventoryController) Add(c *gin.Context) {
+func (ctrl *ProductController) Add(c *gin.Context) {
 	var input struct {
 		CategoryName string  `json:"category_name" binding:"required"`
 		Name         string  `json:"name" binding:"required"`
@@ -107,10 +107,10 @@ func (ctrl *InventoryController) Add(c *gin.Context) {
 	}
 
 	// Map input ke Inventory domain model
-	inventory := domain.Inventory{
+	inventory := domain.Product{
 		Name:        input.Name,
 		CodeProduct: input.CodeProduct,
-		Quantity:    input.Quantity,
+		Stock:       input.Quantity,
 		Price:       input.Price,
 		Status:      input.Status,
 		Image:       input.Image,
@@ -144,62 +144,62 @@ func (ctrl *InventoryController) Add(c *gin.Context) {
 // @Failure 400 {object} Response "Bad request"
 // @Failure 500 {object} Response "Internal server error"
 // @Router /inventory/{id} [put]
-func (ctrl *InventoryController) Update(c *gin.Context) {
+func (ctrl *ProductController) Update(c *gin.Context) {
 	id := c.Param("id")
 	categoryName := c.DefaultQuery("category_name", "")
 
-	var inventory domain.Inventory
-	if err := c.ShouldBindJSON(&inventory); err != nil {
+	var product domain.Product
+	if err := c.ShouldBindJSON(&product); err != nil {
 		ctrl.logger.Error("Invalid request body", zap.Error(err))
 		BadResponse(c, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Convert id to uint
-	inventoryID, err := helper.Uint(id)
+	productID, err := helper.Uint(id)
 	if err != nil {
-		ctrl.logger.Error("Invalid inventory ID", zap.String("id", id))
-		BadResponse(c, "Invalid inventory ID", http.StatusBadRequest)
+		ctrl.logger.Error("Invalid product ID", zap.String("id", id))
+		BadResponse(c, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
-	// Panggil service untuk update inventory
-	_, err = ctrl.service.Update(inventoryID, &inventory, categoryName)
+	// Panggil service untuk update product
+	_, err = ctrl.service.Update(productID, &product, categoryName)
 	if err != nil {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	GoodResponseWithData(c, "Inventory updated successfully", http.StatusOK, nil)
+	GoodResponseWithData(c, "product updated successfully", http.StatusOK, nil)
 }
 
-// @Summary Soft delete an inventory item
-// @Description Soft deletes an inventory item by ID (marks it as deleted without removing from database)
-// @Tags inventory
+// @Summary Soft delete an product item
+// @Description Soft deletes an product item by ID (marks it as deleted without removing from database)
+// @Tags product
 // @Accept json
 // @Produce json
-// @Param id path int true "Inventory ID"
-// @Success 200 {object} domain.Response "Inventory soft deleted successfully"
-// @Failure 400 {object} domain.Response "Invalid inventory ID"
-// @Failure 500 {object} domain.Response "Failed to soft delete inventory"
-// @Router /inventory/{id}/soft-delete [delete]
-func (ctrl *InventoryController) Delete(c *gin.Context) {
+// @Param id path int true "product ID"
+// @Success 200 {object} domain.Response "product soft deleted successfully"
+// @Failure 400 {object} domain.Response "Invalid product ID"
+// @Failure 500 {object} domain.Response "Failed to soft delete product"
+// @Router /product/{id}/soft-delete [delete]
+func (ctrl *ProductController) Delete(c *gin.Context) {
 	id := c.Param("id")
 
 	// Convert id to uint
-	inventoryID, err := helper.Uint(id)
+	productID, err := helper.Uint(id)
 	if err != nil {
-		ctrl.logger.Error("Invalid inventory ID", zap.String("id", id))
-		BadResponse(c, "Invalid inventory ID", http.StatusBadRequest)
+		ctrl.logger.Error("Invalid product ID", zap.String("id", id))
+		BadResponse(c, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
-	// Panggil service untuk soft delete inventory
-	err = ctrl.service.Delete(inventoryID)
+	// Panggil service untuk soft delete product
+	err = ctrl.service.Delete(productID)
 	if err != nil {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	GoodResponseWithData(c, "Inventory soft deleted successfully", http.StatusOK, nil)
+	GoodResponseWithData(c, "product soft deleted successfully", http.StatusOK, nil)
 }

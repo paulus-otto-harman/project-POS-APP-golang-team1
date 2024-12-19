@@ -81,11 +81,11 @@ func (repo *CategoryRepository) Update(category *domain.Category) error {
 	return nil
 }
 
-func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) ([]*domain.Inventory, int64, error) {
-	var products []*domain.Inventory
+func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
+	var products []*domain.Product
 	var totalItems int64
 
-	query := repo.db.Model(&domain.Inventory{})
+	query := repo.db.Model(&domain.Product{})
 	if categoryID != "" {
 		query = query.Where("category_id = ?", categoryID)
 	}
@@ -97,7 +97,7 @@ func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) (
 
 	if totalItems == 0 {
 		repo.log.Warn("No products found")
-		return []*domain.Inventory{}, 0, nil
+		return []*domain.Product{}, 0, nil
 	}
 
 	err := query.Preload("Category", func(db *gorm.DB) *gorm.DB {
