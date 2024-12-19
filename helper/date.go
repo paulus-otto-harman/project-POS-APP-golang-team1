@@ -13,3 +13,9 @@ func Date(dateString string) time.Time {
 	date, _ := time.Parse(layoutFormat, dateString)
 	return date
 }
+
+func MonthDate(dateString string) time.Time {
+	layoutFormat := "02-Jan-2006"
+	date, _ := time.Parse(layoutFormat, dateString)
+	return date
+}
