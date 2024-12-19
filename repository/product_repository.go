@@ -146,24 +146,6 @@ func (repo ProductRepository) Update(id uint, ProductData *domain.Product, categ
 			return nil, fmt.Errorf("category '%s' not found", categoryName) // Pastikan error ini terpropagasi dengan benar
 		}
 		ProductData.CategoryID = int(category.ID)
-	} else {
-		// Jika kategori kosong, biarkan ID kategori lama tetap dipakai
-		ProductData.CategoryID = existingProduct.CategoryID
-	}
-
-	// Cek nilai 'status' jika tidak ada, gunakan nilai lama
-	if ProductData.Status == "" {
-		ProductData.Status = existingProduct.Status // Pertahankan status lama
-	}
-
-	// Cek nilai 'name' jika tidak ada, gunakan nilai lama
-	if ProductData.Name == "" {
-		ProductData.Name = existingProduct.Name // Pertahankan name lama
-	}
-
-	// Cek nilai 'price' jika tidak ada, gunakan nilai lama
-	if ProductData.Price == 0 {
-		ProductData.Price = existingProduct.Price // Pertahankan price lama
 	}
 
 	// Cek nilai 'quantity' jika tidak ada, gunakan nilai lama
@@ -175,16 +157,6 @@ func (repo ProductRepository) Update(id uint, ProductData *domain.Product, categ
 		ProductData.Availability = "In Stock"
 	} else if ProductData.Stock < 1 {
 		ProductData.Availability = "Out of Stock"
-	}
-
-	// Cek nilai 'image' jika tidak ada, gunakan nilai lama
-	if ProductData.Image == "" {
-		ProductData.Image = existingProduct.Image // Pertahankan image lama
-	}
-
-	// Cek nilai 'code_product' jika tidak ada, gunakan nilai lama
-	if ProductData.CodeProduct == "" {
-		ProductData.CodeProduct = existingProduct.CodeProduct // Pertahankan code_product lama
 	}
 
 	// Update field lainnya
