@@ -57,6 +57,15 @@ func NewRoutes(ctx infra.ServiceContext) {
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
 	}
 
+
+	inventoryRoutes := r.Group("/inventory")
+	{
+		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
+		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
+		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
+		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
+  }
+
 	tablesRoutes := r.Group("/tables")
 	{
 		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
