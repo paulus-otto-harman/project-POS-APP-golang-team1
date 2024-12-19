@@ -3,6 +3,7 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"mime/multipart"
@@ -70,4 +71,37 @@ func Upload(wg *sync.WaitGroup, files []*multipart.FileHeader) ([]domain.CdnResp
 	}
 	wg.Wait()
 	return results, err
+}
+
+type Response struct {
+	Status  bool   `json:"status"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
+}
+
+func BadResponse(c *gin.Context, message string, statusCode int) {
+	c.JSON(statusCode, Response{
+		Status:  false,
+		Message: message,
+	})
+}
+
+func GoodResponseWithData(c *gin.Context, message string, statusCode int, data interface{}) {
+	c.JSON(statusCode, Response{
+		Status:  true,
+		Message: message,
+		Data:    data,
+	})
+}
+
+func GoodResponseWithPage(c *gin.Context, message string, statusCode, total, totalPages, page, Limit int, data interface{}) {
+	c.JSON(statusCode, domain.DataPage{
+		Status:      true,
+		Message:     message,
+		Total:       int64(total),
+		Pages:       totalPages,
+		CurrentPage: uint(page),
+		Limit:       uint(Limit),
+		Data:        data,
+	})
 }

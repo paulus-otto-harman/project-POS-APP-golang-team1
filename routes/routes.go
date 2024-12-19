@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,29 +22,28 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/register", ctx.Ctl.UserHandler.Registration)
-	r.GET("/users", ctx.Ctl.UserHandler.All)
-	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
+	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
+	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
+	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
-	r.GET("/staffs", ctx.Middleware.UserCan("list-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
+	// r.Use(ctx.Middleware.Jwt.AuthJWT())
 
-	r.GET("/staffs/:id", ctx.Middleware.UserCan("view-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
+	staffRoutes := r.Group("/staffs")
+	{
+		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
+		staffRoutes.GET("/:id", ctx.Ctl.UserHandler.GetByID)
+		staffRoutes.POST("/", ctx.Ctl.UserHandler.Registration)
+		staffRoutes.DELETE("/:id", ctx.Ctl.UserHandler.Delete)
+		staffRoutes.PUT("/:id", ctx.Ctl.UserHandler.Update)
+	}
 
-	r.POST("/staffs", ctx.Middleware.UserCan("create-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.PUT("/staffs/:id", ctx.Middleware.UserCan("update-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
-
-	r.DELETE("/staffs/:id", ctx.Middleware.UserCan("delete-staff"), func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
-	})
+	reservationsRoutes := r.Group("/reservations")
+	{
+		reservationsRoutes.GET("/", ctx.Ctl.ReservationHandler.All)
+		reservationsRoutes.POST("/", ctx.Ctl.ReservationHandler.Add)
+		reservationsRoutes.GET("/:id", ctx.Ctl.ReservationHandler.GetByID)
+		reservationsRoutes.PUT("/:id", ctx.Ctl.ReservationHandler.Update)
+	}
 
 	categoriesRoutes := r.Group("/categories")
 	{
@@ -61,10 +61,12 @@ func NewRoutes(ctx infra.ServiceContext) {
 	{
 		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
 	}
+  
 	paymentsRoutes := r.Group("/payments")
 	{
 		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
 	}
+  
 	ordersRoutes := r.Group("/orders")
 	{
 		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
@@ -72,7 +74,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
 		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
-
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -82,19 +83,18 @@ func NewRoutes(ctx infra.ServiceContext) {
 }
 
 func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
-	const ShutdownTimeout = 5
-
 	srv := &http.Server{
 		Addr:    ctx.Cfg.ServerPort,
 		Handler: handler,
 	}
 
+	if ctx.Cfg.ShutdownTimeout == 0 {
+		launchServer(srv, ctx.Cfg.ServerPort)
+		return
+	}
+
 	go func() {
-		// service connections
-		log.Println("Listening and serving HTTP on", ctx.Cfg.ServerPort)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
+		launchServer(srv, ctx.Cfg.ServerPort)
 	}()
 
 	// Wait for interrupt signal to gracefully shut down the server with
@@ -106,8 +106,7 @@ func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutdown Server ...")
-
-	appContext, cancel := context.WithTimeout(context.Background(), ShutdownTimeout*time.Second)
+	appContext, cancel := context.WithTimeout(context.Background(), time.Duration(ctx.Cfg.ShutdownTimeout)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(appContext); err != nil {
 		log.Fatal("Server Shutdown:", err)
@@ -115,7 +114,15 @@ func gracefulShutdown(ctx infra.ServiceContext, handler http.Handler) {
 	// catching appContext.Done(). timeout of ShutdownTimeout seconds.
 	select {
 	case <-appContext.Done():
-		log.Println(fmt.Sprintf("timeout of %d seconds.", ShutdownTimeout))
+		log.Println(fmt.Sprintf("timeout of %d seconds.", ctx.Cfg.ShutdownTimeout))
 	}
 	log.Println("Server exiting")
+}
+
+func launchServer(server *http.Server, port string) {
+	// service connections
+	log.Println("Listening and serving HTTP on", port)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalf("listen: %s\n", err)
+	}
 }

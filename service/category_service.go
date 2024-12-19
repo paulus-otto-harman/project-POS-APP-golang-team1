@@ -62,12 +62,14 @@ func (s *categoryService) Update(category *domain.Category) error {
 	}
 	return nil
 }
+
 func (s *categoryService) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
 
 	products, totalItems, err := s.repo.AllProducts(page, limit, categoryID)
 	if err != nil {
 		return nil, 0, err
 	}
+  
 	if len(products) == 0 {
 		return nil, int64(totalItems), errors.New("products not found")
 	}
