@@ -75,7 +75,7 @@ func (ctrl *OrderController) AllPayments(c *gin.Context) {
 }
 
 type orderRequest struct {
-	Name       string             `json:"name" binding:"required"`
+	Name       string             `json:"name" binding:"required,min=3"`
 	TableID    uint               `json:"table_id" binding:"required"`
 	OrderItems []domain.OrderItem `json:"order_items" binding:"required,dive"`
 }
@@ -95,7 +95,7 @@ func (ctrl *OrderController) Create(c *gin.Context) {
 	var input orderRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		BadResponse(c, err.Error(), http.StatusBadRequest)
+		BadResponse(c, helper.FormatValidationError(err), http.StatusBadRequest)
 		return
 	}
 
@@ -111,9 +111,9 @@ func (ctrl *OrderController) Create(c *gin.Context) {
 type updateOrderRequest struct {
 	Name            string             `json:"name" binding:"required"`
 	TableID         uint               `json:"table_id" binding:"required"`
-	PaymentMethodID *uint              `json:"payment_method_id" binding:""`
-	StatusPayment   string             `json:"status_payment" binding:""`
-	StatusKitchen   string             `json:"status_kitchen" binding:""`
+	PaymentMethodID *uint              `json:"payment_method_id"`
+	StatusPayment   string             `json:"status_payment"`
+	StatusKitchen   string             `json:"status_kitchen"`
 	OrderItems      []domain.OrderItem `json:"order_items" binding:"required,dive"`
 }
 
@@ -143,7 +143,7 @@ func (ctrl *OrderController) Update(c *gin.Context) {
 	var request updateOrderRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		ctrl.logger.Error("Invalid input", zap.Error(err))
-		BadResponse(c, err.Error(), http.StatusBadRequest)
+		BadResponse(c, helper.FormatValidationError(err), http.StatusBadRequest)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (ctrl *OrderController) Update(c *gin.Context) {
 	input.OrderItems = request.OrderItems
 	input.StatusPayment = domain.StatusPayment(request.StatusPayment)
 	input.StatusKitchen = domain.StatusKitchen(request.StatusKitchen)
-
+	
 	err := ctrl.service.Update(&input)
 	if err != nil {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)

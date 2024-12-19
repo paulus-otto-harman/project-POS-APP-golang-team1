@@ -12,6 +12,11 @@ func Uint(param string) (uint, error) {
 	return uint(i), nil
 }
 
+func IntToString(num int) string {
+	convStr := strconv.Itoa(num)
+	return convStr
+}
+
 func Float(param string) (float64, error) {
 	f, err := strconv.ParseFloat(param, 64)
 	if err != nil {

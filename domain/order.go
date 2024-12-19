@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -43,7 +44,7 @@ type Order struct {
 
 func generateCodeOrder(db *gorm.DB) (string, error) {
 	var lastOrder Order
-	err := db.Order("id desc").First(&lastOrder).Error
+	err := db.Unscoped().Order("id desc").First(&lastOrder).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return "", fmt.Errorf("failed to retrieve last order: %v", err)
 	}
@@ -94,51 +95,83 @@ func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (o *Order) BeforeUpdate(tx *gorm.DB) (err error) {
-
-	var oldOrder Order
-	if err := tx.Unscoped().First(&oldOrder, o.ID).Error; err != nil {
-		return fmt.Errorf("failed to retrieve old order: %v", err)
+	if o.PaymentMethodID != nil {
+		o.StatusPayment = OrderCompleted
+		o.StatusKitchen = OrderReadyToServe
 	}
 
-	if oldOrder.TableID != o.TableID {
-		if err := updateTableStatus(tx, oldOrder.TableID, true); err != nil {
-			return fmt.Errorf("failed to update old table status: %v", err)
-		}
-
-		if err := updateTableStatus(tx, o.TableID, false); err != nil {
-			return fmt.Errorf("failed to update new table status: %v", err)
-		}
+	var order Order
+	if err := tx.First(&order, o.ID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve table: %v", err)
 	}
 
-	return nil
-}
+	if order.StatusPayment == OrderInProcess {
+		log.Println(order.StatusPayment, "masuk before update")
 
-func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
+		var table Table
 
-	if o.StatusPayment != OrderInProcess {
-		if err := updateTableStatus(tx, o.TableID, true); err != nil {
-			return fmt.Errorf("failed to update table status: %v", err)
+		if err := tx.First(&table, o.TableID).Error; err != nil {
+			return fmt.Errorf("failed to retrieve table: %v", err)
 		}
-	}
-	if o.StatusPayment == OrderCancelled {
+
+		if !table.Status {
+			return fmt.Errorf(table.Name + " is already reserved")
+		}
+
 		var oldOrder Order
 		if err := tx.Unscoped().First(&oldOrder, o.ID).Error; err != nil {
 			return fmt.Errorf("failed to retrieve old order: %v", err)
 		}
 
-		if oldOrder.StatusPayment != OrderCancelled {
-			var orderItems []OrderItem
-			if err := tx.Where("order_id = ?", o.ID).Find(&orderItems).Error; err != nil {
-				return fmt.Errorf("failed to retrieve order items for cancelled order: %v", err)
+		if oldOrder.TableID != o.TableID {
+			log.Println("masuk before update oldtable != table")
+
+			if err := updateTableStatus(tx, oldOrder.TableID, true); err != nil {
+				return fmt.Errorf("failed to update old table status: %v", err)
 			}
 
-			for _, item := range orderItems {
-				if err := adjustProductStock(tx, item.ProductID, item.Quantity); err != nil {
-					return fmt.Errorf("failed to restore stock for product ID %d: %v", item.ProductID, err)
-				}
+			if err := updateTableStatus(tx, o.TableID, false); err != nil {
+				return fmt.Errorf("failed to update new table status: %v", err)
 			}
+
 		}
 
+	}
+
+	// if o.StatusPayment == OrderCancelled {
+	// 	var oldOrder Order
+	// 	if err := tx.Unscoped().First(&oldOrder, o.ID).Error; err != nil {
+	// 		return fmt.Errorf("failed to retrieve old order: %v", err)
+	// 	}
+
+	// 	var orderItems []OrderItem
+	// 	if err := tx.Where("order_id = ?", o.ID).Find(&orderItems).Error; err != nil {
+	// 		return fmt.Errorf("failed to retrieve order items for cancelled order: %v", err)
+	// 	}
+
+	// 	if oldOrder.StatusPayment != OrderCancelled {
+	// 		for _, item := range orderItems {
+	// 			if err := adjustProductStock(tx, item.ProductID, item.Quantity); err != nil {
+	// 				return fmt.Errorf("failed to restore stock for product ID %d: %v", item.ProductID, err)
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	return nil
+}
+
+func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
+	var order Order
+	if err := tx.First(&order, o.ID).Error; err != nil {
+		return fmt.Errorf("failed to retrieve table: %v", err)
+	}
+	if order.StatusPayment != OrderInProcess {
+		log.Println(order.StatusPayment, "masuk after update")
+
+		if err := updateTableStatus(tx, o.TableID, true); err != nil {
+			return fmt.Errorf("failed to update table status: %v", err)
+		}
 	}
 
 	var existingItems []OrderItem
@@ -172,6 +205,13 @@ func (o *Order) AfterDelete(tx *gorm.DB) (err error) {
 			return fmt.Errorf("failed to restore stock for product ID %d: %v", item.ProductID, err)
 		}
 	}
+
+	if o.StatusPayment == OrderInProcess {
+		log.Println(o.StatusPayment, "masuk after delete")
+		if err := updateTableStatus(tx, o.TableID, true); err != nil {
+			return fmt.Errorf("failed to update table status: %v", err)
+		}
+	}
 	return nil
 }
 
@@ -192,9 +232,9 @@ type OrderItem struct {
 	ID        uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
 	OrderID   uint      `gorm:"not null" json:"order_id" example:"1" swaggerignore:"true"`
 	Order     Order     `gorm:"foreignKey:OrderID;references:ID" swaggerignore:"true"`
-	ProductID uint      `gorm:"not null" json:"product_id" example:"1"`
-	Product   Product   `gorm:"foreignKey:ProductID;references:ID" swaggerignore:"true"`
-	Quantity  int       `gorm:"not null" json:"quantity" example:"2"`
+	ProductID uint      `gorm:"not null" json:"product_id" binding:"required" example:"1"`
+	Product   Product   `gorm:"foreignKey:ProductID;references:ID" binding:"-" swaggerignore:"true"`
+	Quantity  int       `gorm:"not null" json:"quantity" binding:"gt=0" example:"2"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
 }

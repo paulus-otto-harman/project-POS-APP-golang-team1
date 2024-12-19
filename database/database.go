@@ -63,29 +63,29 @@ func makePostgresString(cfg config.Config) string {
 
 
 func createCustomDBTypes(db *gorm.DB) error {
-  var err error
+//   var err error
   
-	if err = db.Exec(`
-		DO $$ BEGIN CREATE TYPE status_payment AS ENUM ('In Process', 'Completed', 'Cancelled');
-		EXCEPTION WHEN duplicate_object THEN null; END $$;
-	`); err != nil {
-    return err
-  }
+// 	if err = db.Exec(`
+// 		DO $$ BEGIN CREATE TYPE status_payment AS ENUM ('In Process', 'Completed', 'Cancelled');
+// 		EXCEPTION WHEN duplicate_object THEN null; END $$;
+// 	`); err != nil {
+//     return err
+//   }
   
   
-	if err = db.Exec(`
-		DO $$ BEGIN CREATE TYPE status_kitchen AS ENUM ('In The Kitchen', 'Cooking Now', 'Ready To Serve');
-		EXCEPTION WHEN duplicate_object THEN null; END $$;
-	`); err != nil {
-    return err
-  }
+// 	if err = db.Exec(`
+// 		DO $$ BEGIN CREATE TYPE status_kitchen AS ENUM ('In The Kitchen', 'Cooking Now', 'Ready To Serve');
+// 		EXCEPTION WHEN duplicate_object THEN null; END $$;
+// 	`); err != nil {
+//     return err
+//   }
 
-	if err = db.Exec(`
-		DO $$ BEGIN CREATE TYPE user_role AS ENUM('super admin', 'admin', 'staff');
-		EXCEPTION WHEN duplicate_object THEN null; END $$;
-	`); err != nil {
-    return err
-  }
+// 	if err = db.Exec(`
+// 		DO $$ BEGIN CREATE TYPE user_role AS ENUM('super admin', 'admin', 'staff');
+// 		EXCEPTION WHEN duplicate_object THEN null; END $$;
+// 	`); err != nil {
+//     return err
+//   }
   
   return nil
 

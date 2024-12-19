@@ -16,14 +16,14 @@ type Product struct {
 	Stock        int        `gorm:"not null" binding:"required,gt=0" json:"stock" form:"stock" example:"50"`
 	Price        float64    `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"price" form:"price" example:"699.99"`
 	Availability string     `gorm:"size:20;check:availability IN ('In Stock', 'Low Stock', 'Out Of Stock')" json:"availability" example:"In Stock"`
-	Status       string     `gorm:"not null;check:status IN ('Active', 'Inactive')" binding:"required,gt=0" json:"status" form:"status" example:"Active"`
+	Status       string     `gorm:"not null;default:Active;check:status IN ('Active', 'Inactive')" binding:"required,gt=0" json:"status" form:"status" example:"Active"`
 	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
 	UpdatedAt    time.Time  `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
 	DeletedAt    *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (v *Product) BeforeSave(tx *gorm.DB) (err error) {
-  v.Availability = "In Stock"
+	v.Availability = "In Stock"
 
 	if v.Stock == 0 {
 		v.Availability = "Out Of Stock"
@@ -54,7 +54,7 @@ func ProductSeed() []Product {
 			Image:       "/image/pepsi.png",
 			Name:        "Pepsi",
 			CodeProduct: "BEV-002",
-			Stock:       120,
+			Stock:       7,
 			Price:       1.89,
 			Status:      "Active",
 		},

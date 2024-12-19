@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"project/domain"
+	"project/helper"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -30,42 +31,6 @@ func (repo OrderRepository) Create(order *domain.Order) error {
 			return err
 		}
 
-		// for _, item := range order.OrderItems {
-		// 	var product domain.Product
-		// 	if err := tx.First(&product, item.ProductID).Error; err != nil {
-		// 		repo.log.Error("Failed to find product", zap.Error(err))
-		// 		return err
-		// 	}
-
-		// 	if product.Stock < item.Quantity {
-		// 		repo.log.Error("Insufficient stock", zap.Int("stock: ", product.Stock), zap.Int("qty: ", item.Quantity))
-		// 		return errors.New("insufficient stock for product " + product.Name)
-		// 	}
-
-		// 	product.Stock -= item.Quantity
-		// 	if err := tx.Save(&product).Error; err != nil {
-		// 		repo.log.Error("Failed to update product stock", zap.Error(err))
-		// 		return err
-		// 	}
-		// }
-
-		// var table domain.Table
-		// if err := tx.First(&table, order.TableID).Error; err != nil {
-		// 	repo.log.Error("Failed to find table", zap.Error(err))
-		// 	return err
-		// }
-
-		// if !table.Status {
-		// 	repo.log.Error("Table already reserved", zap.String("table_name", table.Name), zap.Bool("status", table.Status))
-		// 	return errors.New(table.Name + " is already reserved")
-		// }
-
-		// table.Status = false
-		// if err := tx.Save(&table).Error; err != nil {
-		// 	repo.log.Error("Failed to update table status", zap.Error(err))
-		// 	return err
-		// }
-
 		repo.log.Info("Order successfully created")
 		return nil
 	})
@@ -75,17 +40,14 @@ func (repo OrderRepository) AllTables(page, limit int) ([]*domain.Table, int64, 
 	var tables []*domain.Table
 	var totalItems int64
 
-	offset := (page - 1) * limit
-
 	err := repo.db.Model(&domain.Table{}).Where("status = ?", true).Count(&totalItems).Error
 	if err != nil {
 		repo.log.Error("Failed to count total tables", zap.Error(err))
 		return nil, 0, err
 	}
 
-	err = repo.db.Model(&domain.Table{}).Where("status = ?", true).
-		Offset(offset).
-		Limit(limit).
+	err = repo.db.Model(&domain.Table{}).Order("id").Where("status = ?", true).
+		Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&tables).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch tables", zap.Error(err))
@@ -138,24 +100,25 @@ func (repo *OrderRepository) FindByIDOrderDetail(order *domain.OrderDetail, id s
 	return nil
 }
 
-func (repo *OrderRepository) FindByIDTable(table *domain.Table, id string) error {
-	if err := repo.db.First(table, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("order not found")
-		}
-		repo.log.Error("Failed to fetch Order by ID", zap.Error(err))
-		return err
-	}
-	return nil
-}
+// func (repo *OrderRepository) FindByIDTable(table *domain.Table, id string) error {
+// 	if err := repo.db.First(table, "id = ?", id).Where("status", true).Error; err != nil {
+// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+// 			return errors.New("table not found")
+// 		}
+// 		repo.log.Error("Failed to fetch table by ID", zap.Error(err))
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (repo *OrderRepository) Update(order *domain.Order) error {
 	return repo.db.Transaction(func(tx *gorm.DB) error {
-		tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&order)
-		// if err := tx.Model(&order).Where("id = ?", order.ID).Updates(order).Error; err != nil {
-		// 	repo.log.Error("Failed to update Order", zap.Error(err))
-		// 	return err
-		// }
+		
+		// tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&order)
+		if err := tx.Model(&order).Where("id = ?", order.ID).Updates(order).Error; err != nil {
+			repo.log.Error("Failed to update Order", zap.Error(err))
+			return err
+		}
 		return nil
 	})
 }
@@ -185,9 +148,7 @@ func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder string, s
 		return nil, 0, nil
 	}
 
-	err := query.
-		Offset((page - 1) * limit).
-		Limit(limit).
+	err := query.Order("id").Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&orders).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch orders", zap.Error(err))
