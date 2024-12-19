@@ -17,7 +17,7 @@ const (
 type User struct {
 	ID                uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	FullName          string         `gorm:"size:100;not null" json:"full_name" example:"John Smith" form:"full_name" binding:"required"`
-	Email             string         `gorm:"unique;not null" json:"email" example:"admin@mail.com" form:"email" binding:"required"`
+	Email             string         `gorm:"index:,unique,composite:emaildeletedat" json:"email" binding:"required" form:"email"`
 	Password          string         `gorm:"not null;default:''" json:"-" example:"password"`
 	Role              UserRole       `gorm:"type:varchar(50);not null" json:"role" example:"admin" form:"role"`
 	ProfilePhoto      string         `gorm:"size:255" json:"profile_photo" example:"/profile_photo/john_smith.jpg"`
@@ -31,10 +31,10 @@ type User struct {
 	AdditionalDetails string         `json:"additional_details" form:"additional_details" gorm:"size:255" example:"details"`
 	CreatedAt         time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt         gorm.DeletedAt `gorm:"index:,unique,composite:emaildeletedat" json:"-"`
 
 	Profile             Profile              `json:"profile"`
 	Permissions         []Permission         `gorm:"many2many:user_permissions;" json:"permissions"`
-	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:Email;references:Email" json:"-"`
+	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID;references:ID" json:"-"`
 	Notifications       []Notification       `gorm:"many2many:user_notifications" json:"user_notifications"` // Reference the join table
 }

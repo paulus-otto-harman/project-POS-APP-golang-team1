@@ -83,3 +83,7 @@ func (repo UserRepository) GetByEmail(email string) *domain.User {
 func (repo UserRepository) Update(user *domain.User) error {
 	return repo.db.Save(user).Error
 }
+
+func (repo UserRepository) Delete(id uint) error {
+	return repo.db.Delete(&domain.User{}, id).Error
+}
