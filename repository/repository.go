@@ -9,6 +9,16 @@ import (
 )
 
 type Repository struct {
+	Auth             AuthRepository
+	PasswordReset    PasswordResetRepository
+	User             UserRepository
+	Reservation      ReservationRepository
+	Notification     NotificationRepository
+	Category         CategoryRepository
+	UserNotification UserNotificationRepository
+	Product          ProductRepository
+  UserPermission   UserPermissionRepository
+
 	Auth          AuthRepository
 	PasswordReset PasswordResetRepository
 	User          UserRepository
@@ -17,19 +27,21 @@ type Repository struct {
 	Category      CategoryRepository
 	Order         OrderRepository
   UserNotification UserNotificationRepository
-	UserPermission   UserPermissionRepository
+	
+
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
 	return Repository{
-		Auth:          *NewAuthRepository(db, cacher, log),
-		PasswordReset: *NewPasswordResetRepository(db, log),
-		User:          *NewUserRepository(db, log),
-    Reservation:      *NewReservationRepository(db, log),
-		Notification:  *NewNotificationRepository(db, log),
-		Category:      *NewCategoryRepository(db, log),
-		Order:         *NewOrderRepository(db, log),
-    UserNotification: *NewUserNotificationRepository(db, log),
-		UserPermission:   *NewUserPermissionRepository(db, log),
+		Auth:             *NewAuthRepository(db, cacher, log),
+		PasswordReset:    *NewPasswordResetRepository(db, log),
+		User:             *NewUserRepository(db, log),
+		Reservation:      *NewReservationRepository(db, log),
+		Notification:     *NewNotificationRepository(db, log),
+		Category:         *NewCategoryRepository(db, log),
+    Order:         *NewOrderRepository(db, log),
+		UserNotification: *NewUserNotificationRepository(db, log),
+		Product:          *NewProductRepository(db, log),
+    UserPermission:   *NewUserPermissionRepository(db, log),
 	}
 }

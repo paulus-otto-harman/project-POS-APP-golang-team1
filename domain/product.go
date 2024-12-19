@@ -7,26 +7,32 @@ import (
 )
 
 type Product struct {
-	ID           uint      `gorm:"primaryKey" json:"id" swaggerignore:"true"`
-	CategoryID   uint      `gorm:"not null" json:"-" example:"1"`
-	Category     Category  `gorm:"foreignKey:CategoryID;references:ID"`
-	Image        string    `gorm:"size:255;not null" json:"image" example:"/image/product.png"`
-	Name         string    `gorm:"size:100;unique" json:"name"`
-	CodeProduct  string    `gorm:"size:50;unique" json:"code_product"`
-	Stock        int       `gorm:"not null" json:"stock" example:"50"`
-	Price        float64   `gorm:"type:decimal(10,2);not null" json:"price" example:"699.99"`
-	Availability string    `gorm:"size:20;check:availability IN ('In Stock',  'Low Stock', 'Out Of Stock')" json:"availability" example:"In Stock"`
-	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+	ID           uint       `gorm:"primaryKey" json:"id" swaggerignore:"true"`
+	CategoryID   int        `gorm:"not null" json:"category_id" binding:"required,gt=0" form:"category_id" example:"1"`
+	Category     Category   `gorm:"foreignKey:CategoryID;references:ID" swaggerignore:"true"`
+	Image        string     `gorm:"size:255;not null" json:"image" binding:"required" example:"/image/product.png"`
+	Name         string     `gorm:"size:100;unique" json:"name" form:"name"`
+	CodeProduct  string     `gorm:"size:50;unique" json:"code_product" form:"code_product"`
+	Stock        int        `gorm:"not null" binding:"required,gt=0" json:"stock" form:"stock" example:"50"`
+	Price        float64    `gorm:"type:decimal(10,2);not null" binding:"required,gt=0" json:"price" form:"price" example:"699.99"`
+	Availability string     `gorm:"size:20;check:availability IN ('In Stock', 'Low Stock', 'Out Of Stock')" json:"availability" example:"In Stock"`
+	Status       string     `gorm:"not null;check:status IN ('Active', 'Inactive')" binding:"required,gt=0" json:"status" form:"status" example:"Active"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
+	DeletedAt    *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (v *Product) BeforeSave(tx *gorm.DB) (err error) {
-	if v.Stock > 0 {
-		v.Availability = "In Stock"
-	} else if v.Stock <= 5 {
-		v.Availability = "Low Stock"
-	} else {
+  v.Availability = "In Stock"
+
+	if v.Stock == 0 {
 		v.Availability = "Out Of Stock"
+		return nil
+	}
+
+	if v.Stock <= 5 {
+		v.Availability = "Low Stock"
+		return nil
 	}
 
 	return nil
@@ -41,6 +47,7 @@ func ProductSeed() []Product {
 			CodeProduct: "BEV-001",
 			Stock:       0,
 			Price:       1.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  1,
@@ -49,14 +56,16 @@ func ProductSeed() []Product {
 			CodeProduct: "BEV-002",
 			Stock:       120,
 			Price:       1.89,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  2,
 			Image:       "/image/potato_chips.png",
 			Name:        "Potato Chips",
 			CodeProduct: "SNK-001",
-			Stock:       80,
+			Stock:       4,
 			Price:       2.49,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  2,
@@ -65,6 +74,7 @@ func ProductSeed() []Product {
 			CodeProduct: "SNK-002",
 			Stock:       60,
 			Price:       1.79,
+			Status:      "Inactive",
 		},
 		{
 			CategoryID:  3,
@@ -73,6 +83,7 @@ func ProductSeed() []Product {
 			CodeProduct: "DSR-001",
 			Stock:       50,
 			Price:       4.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  3,
@@ -81,6 +92,7 @@ func ProductSeed() []Product {
 			CodeProduct: "DSR-002",
 			Stock:       90,
 			Price:       3.49,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  4,
@@ -89,6 +101,7 @@ func ProductSeed() []Product {
 			CodeProduct: "FRT-001",
 			Stock:       150,
 			Price:       0.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  4,
@@ -97,6 +110,7 @@ func ProductSeed() []Product {
 			CodeProduct: "FRT-002",
 			Stock:       180,
 			Price:       0.79,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  5,
@@ -105,6 +119,7 @@ func ProductSeed() []Product {
 			CodeProduct: "VEG-001",
 			Stock:       200,
 			Price:       0.69,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  5,
@@ -113,6 +128,7 @@ func ProductSeed() []Product {
 			CodeProduct: "VEG-002",
 			Stock:       100,
 			Price:       1.29,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  6,
@@ -121,6 +137,7 @@ func ProductSeed() []Product {
 			CodeProduct: "MEAT-001",
 			Stock:       60,
 			Price:       5.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  6,
@@ -129,6 +146,7 @@ func ProductSeed() []Product {
 			CodeProduct: "MEAT-002",
 			Stock:       40,
 			Price:       8.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  7,
@@ -137,6 +155,7 @@ func ProductSeed() []Product {
 			CodeProduct: "DAIRY-001",
 			Stock:       200,
 			Price:       1.49,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  7,
@@ -145,6 +164,7 @@ func ProductSeed() []Product {
 			CodeProduct: "DAIRY-002",
 			Stock:       100,
 			Price:       1.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  8,
@@ -153,6 +173,7 @@ func ProductSeed() []Product {
 			CodeProduct: "BAKE-001",
 			Stock:       80,
 			Price:       2.29,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  8,
@@ -161,6 +182,7 @@ func ProductSeed() []Product {
 			CodeProduct: "BAKE-002",
 			Stock:       60,
 			Price:       1.89,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  9,
@@ -169,6 +191,7 @@ func ProductSeed() []Product {
 			CodeProduct: "HBEV-001",
 			Stock:       70,
 			Price:       1.59,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  9,
@@ -177,6 +200,7 @@ func ProductSeed() []Product {
 			CodeProduct: "HBEV-002",
 			Stock:       50,
 			Price:       2.99,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  10,
@@ -185,6 +209,7 @@ func ProductSeed() []Product {
 			CodeProduct: "CBEV-001",
 			Stock:       60,
 			Price:       3.49,
+			Status:      "Active",
 		},
 		{
 			CategoryID:  10,
@@ -193,6 +218,7 @@ func ProductSeed() []Product {
 			CodeProduct: "CBEV-002",
 			Stock:       100,
 			Price:       2.49,
+			Status:      "Active",
 		},
 	}
 }
