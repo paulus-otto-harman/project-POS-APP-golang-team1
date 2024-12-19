@@ -22,10 +22,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/register", ctx.Ctl.UserHandler.Registration)
-	r.GET("/users", ctx.Ctl.UserHandler.All)
-	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
-
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
@@ -59,6 +55,24 @@ func NewRoutes(ctx infra.ServiceContext) {
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
+	}
+
+	tablesRoutes := r.Group("/tables")
+	{
+		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
+	}
+  
+	paymentsRoutes := r.Group("/payments")
+	{
+		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
+	}
+  
+	ordersRoutes := r.Group("/orders")
+	{
+		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
+		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
+		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
+		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

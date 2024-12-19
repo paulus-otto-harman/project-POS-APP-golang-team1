@@ -54,7 +54,7 @@ func (repo CategoryRepository) All(page, limit int) ([]*domain.Category, int64, 
 		return nil, 0, err
 	}
 
-	if len(categories) == 0 {
+	if totalItems == 0 {
 		repo.log.Warn("No categories found")
 		return nil, 0, errors.New("no categories found")
 	}
