@@ -12,16 +12,4 @@ type PaymentMethod struct {
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"-" swaggerignore:"true"`
 }
 
-func PaymentMethodSeed() []PaymentMethod {
-	return []PaymentMethod{
-		{
-			Name: "Cash",
-		},
-		{
-			Name: "Credit Card",
-		},
-		{
-			Name: "E-Wallet",
-		},
-	}
-}
+

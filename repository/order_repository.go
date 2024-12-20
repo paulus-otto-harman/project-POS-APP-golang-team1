@@ -148,7 +148,7 @@ func (repo OrderRepository) AllOrders(page, limit int, name, codeOrder string, s
 		return nil, 0, nil
 	}
 
-	err := query.Order("id").Scopes(helper.Paginate(uint(page), uint(limit))).
+	err := query.Order("order_id").Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&orders).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch orders", zap.Error(err))
