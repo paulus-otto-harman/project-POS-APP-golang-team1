@@ -64,7 +64,7 @@ type CategoryRequest struct {
 // @Param name formData string true "Category name"
 // @Param description formData string false "Category description"
 // @Param icon formData file true "Category icon"
-// @Success 201 {object} Response{data=nil} "create success"
+// @Success 201 {object} Response "create success"
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 500 {object} Response "Internal server error"
 // @Router /categories/create [post]
