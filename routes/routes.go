@@ -68,6 +68,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
 		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
 	}
+	dashboardRoutes := r.Group("/dashboard")
+	{
+		dashboardRoutes.GET("/", ctx.Ctl.DashboardHandler.GetDashboardSummary)
+
+	}
 
 	tablesRoutes := r.Group("/tables")
 	{

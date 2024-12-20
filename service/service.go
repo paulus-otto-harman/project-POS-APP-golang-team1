@@ -1,9 +1,10 @@
 package service
 
 import (
-	"go.uber.org/zap"
 	"project/config"
 	"project/repository"
+
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -17,6 +18,7 @@ type Service struct {
 	Category      CategoryService
 	Product       ProductService
 	Order         OrderService
+	Dashboard     DashboardService
 }
 
 func NewService(repo repository.Repository, appConfig config.Config, log *zap.Logger) Service {
@@ -31,5 +33,6 @@ func NewService(repo repository.Repository, appConfig config.Config, log *zap.Lo
 		Category:      NewCategoryService(repo.Category, log),
 		Product:       NewProductService(repo.Product, log),
 		Order:         NewOrderService(repo.Order, log),
+		Dashboard:     NewDashboardService(repo.Dashboard, log),
 	}
 }

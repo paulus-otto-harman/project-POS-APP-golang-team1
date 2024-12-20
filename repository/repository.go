@@ -19,6 +19,7 @@ type Repository struct {
 	UserNotification UserNotificationRepository
 	Product          ProductRepository
 	UserPermission   UserPermissionRepository
+	Dashboard        DashboardRepository
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -33,5 +34,6 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		UserNotification: *NewUserNotificationRepository(db, log),
 		Product:          *NewProductRepository(db, log),
 		UserPermission:   *NewUserPermissionRepository(db, log),
+		Dashboard:        *NewDashboardRepository(db, log),
 	}
 }

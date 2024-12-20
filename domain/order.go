@@ -285,17 +285,74 @@ func adjustProductStock(tx *gorm.DB, productID uint, quantityChange int) error {
 	return nil
 }
 
-func OrderSeed() []Order {
-	return []Order{
-		{
-			TableID: 1,
-			Name:    "John Doe",
-			OrderItems: []OrderItem{
-				{
-					ProductID: 2,
-					Quantity:  2,
-				},
-			},
-		},
-	}
-}
+// func OrderSeed() []Order {
+// 	return []Order{
+// 		{
+// 			TableID: 1,
+// 			Name:    "John Doe",
+// 			OrderItems: []OrderItem{
+// 				{
+// 					ProductID: 2,
+// 					Quantity:  2,
+// 				},
+// 			},
+// 		},
+// 	}
+// }
+
+// func OrderSeed() []Order {
+// 	return []Order{
+// 		{
+// 			TableID:       1,
+// 			Name:          "Customer 1",
+// 			CodeOrder:     "ORD001",
+// 			Tax:           10.0,
+// 			StatusPayment: StatusPayment("Completed"),
+// 			StatusKitchen: StatusKitchen("Ready To Serve"),
+// 			CreatedAt:     time.Now(),
+// 		},
+// 		{
+// 			TableID:       2,
+// 			Name:          "Customer 2",
+// 			CodeOrder:     "ORD002",
+// 			Tax:           10.0,
+// 			StatusPayment: StatusPayment("Completed"),
+// 			StatusKitchen: StatusKitchen("Ready To Serve"),
+// 			CreatedAt:     time.Now(),
+// 		},
+// 		{
+// 			TableID:       3,
+// 			Name:          "Customer 3",
+// 			CodeOrder:     "ORD003",
+// 			Tax:           10.0,
+// 			StatusPayment: StatusPayment("In Process"),
+// 			StatusKitchen: StatusKitchen("Cooking Now"),
+// 			CreatedAt:     time.Now(),
+// 		},
+// 	}
+// }
+
+// func OrderItemSeed() []OrderItem {
+// 	return []OrderItem{
+// 		{
+// 			OrderID:   1, // Order ID dari order yang pertama
+// 			ProductID: 1, // Product A
+// 			Quantity:  2,
+// 		},
+// 		{
+// 			OrderID:   1, // Order ID dari order yang pertama
+// 			ProductID: 2, // Product B
+// 			Quantity:  1,
+// 		},
+// 		{
+// 			OrderID:   2, // Order ID dari order yang kedua
+// 			ProductID: 3, // Product C
+// 			Quantity:  3,
+// 		},
+// 		{
+// 			OrderID:   3, // Order ID dari order yang ketiga
+// 			ProductID: 1, // Product A
+// 			Quantity:  1,
+// 		},
+// 	}
+// }
