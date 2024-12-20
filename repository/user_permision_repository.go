@@ -25,3 +25,7 @@ func (repo UserPermissionRepository) Create(userPermission domain.UserPermission
 		return nil
 	})
 }
+
+func (repo UserPermissionRepository) Update() error {
+	return nil
+}
