@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"project/domain"
+	"project/helper"
 	"time"
 
 	"go.uber.org/zap"
@@ -19,14 +20,20 @@ func NewProductRepository(db *gorm.DB, log *zap.Logger) *ProductRepository {
 	return &ProductRepository{db: db, log: log}
 }
 
-func (repo ProductRepository) All(page, limit int, productStatus, categoryName, availability string, quantity int, minPrice, maxPrice float64) ([]*domain.Product, int64, error) {
+func (repo ProductRepository) All(
+	page, limit int,
+	productStatus, categoryName, availability string,
+	quantity int,
+	minPrice, maxPrice float64,
+) ([]*domain.Product, int64, error) {
 
-	var product []*domain.Product
+	var products []*domain.Product
 	var totalItems int64
 
 	// Mulai query
 	query := repo.db.Model(&domain.Product{}).
-		Joins("JOIN categories ON categories.id = products.category_id").Where("products.deleted_at IS NULL")
+		Joins("JOIN categories ON categories.id = products.category_id").
+		Where("products.deleted_at IS NULL")
 
 	// Filter by Category Name
 	if categoryName != "" {
@@ -85,20 +92,18 @@ func (repo ProductRepository) All(page, limit int, productStatus, categoryName, 
 		return []*domain.Product{}, 0, nil
 	}
 
-	// Fetch filtered Product data
-	err := query.Preload("Category", func(db *gorm.DB) *gorm.DB {
+	err := query.Scopes(
+		helper.Paginate(uint(page), uint(limit)),
+	).Preload("Category", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, name, created_at, updated_at")
-	}).
-		Offset((page - 1) * limit).
-		Limit(limit).
-		Find(&product).Error
+	}).Find(&products).Error
 
 	if err != nil {
 		repo.log.Error("Failed to fetch product", zap.Error(err))
 		return nil, 0, err
 	}
 
-	return product, totalItems, nil
+	return products, totalItems, nil
 }
 
 func (repo ProductRepository) Add(product *domain.Product, categoryName string) (*domain.Product, error) {

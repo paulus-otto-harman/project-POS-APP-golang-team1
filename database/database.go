@@ -61,7 +61,6 @@ func makePostgresString(cfg config.Config) string {
 		cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Name, cfg.DB.Password)
 }
 
-
 func createCustomDBTypes(db *gorm.DB) error {
 	var err error
 
@@ -87,5 +86,5 @@ func createCustomDBTypes(db *gorm.DB) error {
 	}
 
 	return nil
-  
+
 }

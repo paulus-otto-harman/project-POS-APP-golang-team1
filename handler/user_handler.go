@@ -21,15 +21,20 @@ func NewUserController(service service.Service, logger *zap.Logger) *UserControl
 	return &UserController{service: service, logger: logger}
 }
 
-// Check Email endpoint
-// @Summary Check Email
-// @Description email must be valid when users want to reset their passwords
-// @Tags Auth
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} handler.Response "email is valid"
-// @Failure 404 {object} handler.Response "user not found"
-// @Router  /users [get]
+// All retrieves a paginated list of users.
+// @Summary      Get all users
+// @Description  Retrieve a list of users with optional pagination, sorting, and filtering.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        page      query     int     false  "Page number (default: 1)"
+// @Param        limit     query     int     false  "Number of users per page (default: 10)"
+// @Param        sort_by   query     string  false  "Field to sort by"
+// @Param        sort      query     string  false  "Sort direction (asc/desc)"
+// @Success      200       {object}  Response{data=[]domain.User}
+// @Failure      400       {object}  Response{error=string}
+// @Failure      500       {object}  Response{error=string}
+// @Router       /staffs [get]
 func (ctrl *UserController) All(c *gin.Context) {
 	var err error
 	queryURL := c.Query
@@ -83,16 +88,19 @@ func (ctrl *UserController) All(c *gin.Context) {
 	GoodResponseWithPage(c, "Users fetched successfully", http.StatusOK, int(count), totalPages, int(page), int(limit), users)
 }
 
-// Registration endpoint
-// @Summary Staff Registration
-// @Description register staff
-// @Tags Auth
-// @Accept  json
-// @Produce  json
-// @Param domain.User body domain.User true " "
-// @Success 200 {object} handler.Response "login successfully"
-// @Failure 500 {object} handler.Response "server error"
-// @Router  /register [post]
+// Registration registers a new user.
+// @Summary      Register a new user
+// @Description  Create a new user account with optional profile picture upload.
+// @Tags         users
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        profile_picture  formData  file    true   "Profile picture file"
+// @Param        birth_date       formData  string  true   "User's birth date"
+// @Param        data             body      domain.User  true  "User registration data"
+// @Success      201              {object}  Response{data=domain.User}
+// @Failure      400              {object}  Response{error=string}
+// @Failure      500              {object}  Response{error=string}
+// @Router       /staffs [post]
 func (ctrl *UserController) Registration(c *gin.Context) {
 	var file multipart.File
 	var fileHeader *multipart.FileHeader
@@ -205,6 +213,17 @@ type NewPassword struct {
 	ConfirmPassword string `binding:"required,eqfield=Password" json:"confirm_password"`
 }
 
+// Delete deletes a user by ID.
+// @Summary      Delete a user
+// @Description  Remove a user from the system by their ID.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  Response{message=string}
+// @Failure      400  {object}  Response{error=string}
+// @Failure      500  {object}  Response{error=string}
+// @Router       /staffs/{id} [delete]
 func (ctrl *UserController) Delete(c *gin.Context) {
 	userID, err := helper.Uint(c.Param("id"))
 	if err != nil {
@@ -222,6 +241,20 @@ func (ctrl *UserController) Delete(c *gin.Context) {
 	GoodResponseWithData(c, "User deleted", http.StatusOK, nil)
 }
 
+// Update updates an existing user.
+// @Summary      Update user details
+// @Description  Modify user data with optional profile picture upload.
+// @Tags         users
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id               path      int     true   "User ID"
+// @Param        profile_picture  formData  file    true   "Profile picture file"
+// @Param        birth_date       formData  string  true   "User's birth date"
+// @Param        data             body      domain.User  true  "User update data"
+// @Success      200              {object}  Response{message=string}
+// @Failure      400              {object}  Response{error=string}
+// @Failure      500              {object}  Response{error=string}
+// @Router       /staffs/{id} [put]
 func (ctrl *UserController) Update(c *gin.Context) {
 	var userInput domain.User
 	var file multipart.File
@@ -229,7 +262,12 @@ func (ctrl *UserController) Update(c *gin.Context) {
 	var filename string
 	var err error
 
-	userID, err := helper.Uint(c.Param("id"))
+	ID := c.GetString("user-id")
+	if ID == "" {
+		ID = c.Param("id")
+	}
+
+	userID, err := helper.Uint(ID)
 	if err != nil {
 		ctrl.logger.Error("invalid parameter", zap.Error(err))
 		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
@@ -294,6 +332,17 @@ func (ctrl *UserController) Update(c *gin.Context) {
 	GoodResponseWithData(c, "User updated", http.StatusOK, nil)
 }
 
+// GetByID retrieves a single user by their ID.
+// @Summary      Get user by ID
+// @Description  Retrieve user details by their unique identifier.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  Response{data=domain.User}
+// @Failure      400  {object}  Response{error=string}
+// @Failure      500  {object}  Response{error=string}
+// @Router       /staffs/{id} [get]
 func (ctrl *UserController) GetByID(c *gin.Context) {
 	userID, err := helper.Uint(c.Param("id"))
 	if err != nil {
