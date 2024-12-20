@@ -51,7 +51,6 @@ func (ctrl *CategoryController) All(c *gin.Context) {
 }
 
 type CategoryRequest struct {
-	// Icon string `json:"icon" binding:"required" form:"icon"`
 	Name        string `json:"name" binding:"required,min=3" form:"name"`
 	Description string `json:"description" binding:"required,min=20" form:"description"`
 }
@@ -208,7 +207,7 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 // @Param page query int false "Page number, default is 1"
 // @Param limit query int false "Number of items per page, default is 10"
 // @Param category_id query string false "Category ID to filter products"
-// @Success 200 {object} domain.DataPage{data=[]domain.Product} "fetch success"
+// @Success 200 {object} domain.DataPage{data=[]domain.ProductDetail} "fetch success"
 // @Failure 404 {object} Response "categories not found"
 // @Failure 500 {object} Response "internal server error"
 // @Router /products/ [get]

@@ -80,11 +80,11 @@ func (repo *CategoryRepository) Update(category *domain.Category) error {
 	return nil
 }
 
-func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) ([]*domain.Product, int64, error) {
-	var products []*domain.Product
+func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) ([]*domain.ProductDetail, int64, error) {
+	var products []*domain.ProductDetail
 	var totalItems int64
 
-	query := repo.db.Model(&domain.Product{})
+	query := repo.db.Model(&domain.ProductDetail{})
 	if categoryID != "" {
 		query = query.Where("category_id = ?", categoryID)
 	}
@@ -96,13 +96,10 @@ func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) (
 
 	if totalItems == 0 {
 		repo.log.Warn("No products found")
-		return []*domain.Product{}, 0, nil
+		return []*domain.ProductDetail{}, 0, nil
 	}
 
-	err := query.Preload("Category", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, name, created_at, updated_at")
-	}).Order("id").
-		Scopes(helper.Paginate(uint(page), uint(limit))).
+	err := query.Order("id").Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&products).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch products", zap.Error(err))
