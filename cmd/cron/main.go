@@ -12,10 +12,6 @@ func main() {
 	// Membuat instance cron
 	c := cron.New()
 	ctx, err := infra.NewServiceContext()
-	/*
-		TODO:
-		- add notification low stock to cron job hourly
-	*/
 	if err != nil {
 		log.Fatal("can't init service context %w", err)
 	}
@@ -26,6 +22,15 @@ func main() {
 
 	if err != nil {
 		fmt.Println("Error update shift schedule from cron:", err)
+		return
+	}
+
+	_, err = c.AddFunc("* * * * *", func() {
+		ctx.Ctl.NotificationHandler.SendNotificationLowStock()
+	})
+
+	if err != nil {
+		fmt.Println("Error sending notification low stock from cron:", err)
 		return
 	}
 	// Menjalankan cron

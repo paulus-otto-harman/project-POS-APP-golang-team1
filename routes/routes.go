@@ -93,7 +93,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
 		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
-		notificationRoutes.POST("/low-stock", ctx.Ctl.NotificationHandler.SendNotificationLowStock)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

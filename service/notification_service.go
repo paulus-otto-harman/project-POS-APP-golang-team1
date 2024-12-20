@@ -23,6 +23,12 @@ type notificationService struct {
 
 // CreateNotification implements NotificationService.
 func (n *notificationService) CreateNotificationLowStock() error {
+	products, _, err := n.repo.Product.All(0, 0, "", "", "Low Stock", 0, 0.0, 0.0)
+	if err != nil {
+		n.log.Error("Failed to fetch products", zap.Error(err))
+		return err
+	}
+
 	n.log.Info("Get admin data from users")
 	admins, err := n.repo.User.GetByRole("admin")
 	if err != nil {
@@ -30,38 +36,41 @@ func (n *notificationService) CreateNotificationLowStock() error {
 		return err
 	}
 
-	// Create a new notification
-	newNotif := domain.Notification{
-		Title:   "Low Inventory Alert",
-		Content: "This is to notify you that the following items are running low in stock:",
-	}
-
-	// Start a transaction to create the notification
-	err = n.repo.Notification.Create(&newNotif)
-	if err != nil {
-		return err
-	}
-
-	// The ID is now set automatically after Create
-	createdNotifID := newNotif.ID
-
-	// Now, create UserNotification for each admin
-	for _, admin := range admins {
-		// Create a UserNotification for each admin
-		userNotif := domain.UserNotification{
-			UserID:         admin.ID,
-			NotificationID: createdNotifID, // Use the ID from the created notification
-			Status:         "unread",       // Default status
-			CreatedAt:      time.Now(),     // Or use the default time set in BeforeCreate
+	for _, product := range products {
+		// Create a new notification
+		newNotif := domain.Notification{
+			Title:        "Low Inventory Alert",
+			Content:      "This is to notify you that the following items are running low in stock:",
+			ProductName:  product.Name,
+			ProductImage: product.Image,
 		}
 
-		// Insert the UserNotification into the database
-		err := n.repo.UserNotification.Create(userNotif)
+		err = n.repo.Notification.Create(&newNotif)
 		if err != nil {
 			return err
 		}
-	}
 
+		// The ID is now set automatically after Create
+		createdNotifID := newNotif.ID
+
+		// Now, create UserNotification for each admin
+		for _, admin := range admins {
+			// Create a UserNotification for each admin
+			userNotif := domain.UserNotification{
+				UserID:         admin.ID,
+				NotificationID: createdNotifID, // Use the ID from the created notification
+				Status:         "unread",       // Default status
+				CreatedAt:      time.Now(),     // Or use the default time set in BeforeCreate
+			}
+
+			// Insert the UserNotification into the database
+			err := n.repo.UserNotification.Create(userNotif)
+			if err != nil {
+				return err
+			}
+			n.log.Info("Created UserNotification for admin", zap.String("UserID", admin.FullName), zap.Uint("NotificationID", createdNotifID))
+		}
+	}
 	return nil
 }
 
