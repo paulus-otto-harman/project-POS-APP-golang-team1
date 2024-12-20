@@ -34,7 +34,7 @@ type Order struct {
 	Tax             float64        `gorm:"type:decimal(4,2);not null;default:10.0" json:"tax"`
 	PaymentMethodID *uint          `gorm:"default:null" json:"payment_method_id" example:"1"`
 	PaymentMethod   PaymentMethod  `gorm:"foreignKey:PaymentMethodID;references:ID"`
-	StatusPayment   StatusPayment  `gorm:"type:status_payment;default:'In Process'" json:"status_payment" example:"In Process"`
+	StatusPayment   StatusPayment  `gorm:"type:status_payment;default:'In Process'" json:"status_payment" example:"In Process" binding:"paymentStatus"`
 	StatusKitchen   StatusKitchen  `gorm:"type:status_kitchen;default:'In The Kitchen'" json:"status_kitchen" example:"In The Kitchen"`
 	OrderItems      []OrderItem    `gorm:"foreignKey:OrderID;references:ID"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`

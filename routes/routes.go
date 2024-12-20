@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"project/domain"
+	"project/handler"
+	"project/helper"
 	"project/infra"
 	"syscall"
 	"time"
@@ -86,6 +89,17 @@ func NewRoutes(ctx infra.ServiceContext) {
 		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
 		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
+
+	// for testing custom validations only !!!
+	r.PUT("/order/:id", func(c *gin.Context) {
+		orderID, _ := helper.Uint(c.Param("id"))
+		order := domain.Order{ID: orderID}
+		if err := c.ShouldBindJSON(&order); err != nil {
+			handler.BadResponse(c, err.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+		handler.GoodResponseWithData(c, "order is valid", http.StatusOK, nil)
+	})
 
 	notificationRoutes := r.Group("/notifications")
 	{
