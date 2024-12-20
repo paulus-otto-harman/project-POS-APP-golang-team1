@@ -87,9 +87,15 @@ func NewRoutes(ctx infra.ServiceContext) {
 		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	notificationRoutes := r.Group("/notifications")
+	{
+		notificationRoutes.GET("/:user_id", ctx.Ctl.NotificationHandler.All)
+		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
+		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
+		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
+	}
 
-	notificationRoutes(ctx, r)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
 }

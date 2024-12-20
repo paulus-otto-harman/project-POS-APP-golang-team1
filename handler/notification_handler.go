@@ -57,20 +57,12 @@ func (ctrl *NotificationController) All(c *gin.Context) {
 // @Success      200  {object}  Response
 // @Failure      500  {object}  Response
 // @Router       /notifications/low-stock [post]
-func (ctrl *NotificationController) SendNotificationLowStock(c *gin.Context) {
-	/*
-		TODO:
-		- check if inventory stock are less than 25
-		- if there are no inventory stock less than 25 return good response no need to send notification
-	*/
-
+func (ctrl *NotificationController) SendNotificationLowStock() {
 	err := ctrl.service.Notification.CreateNotificationLowStock()
 	if err != nil {
 		ctrl.logger.Error("failed to send low stock notification", zap.Error(err))
-		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	GoodResponseWithData(c, "Low stock notification sent", http.StatusOK, nil)
 }
 
 // Update godoc
