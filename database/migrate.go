@@ -37,7 +37,6 @@ func autoMigrates(db *gorm.DB) error {
 		&domain.PaymentMethod{},
 		&domain.Order{},
 		&domain.OrderItem{},
-		&domain.Profile{},
 		&domain.PasswordResetToken{},
 	)
 }
@@ -45,7 +44,6 @@ func autoMigrates(db *gorm.DB) error {
 func dropTables(db *gorm.DB) error {
 	return db.Migrator().DropTable(
 		&domain.PasswordResetToken{},
-		&domain.Profile{},
 		&domain.User{},
 		&domain.Reservation{},
 		&domain.Notification{},
