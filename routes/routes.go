@@ -35,6 +35,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	staffRoutes := r.Group("/staffs")
 	{
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
+		staffRoutes.GET("/:id", ctx.Ctl.UserHandler.GetByID)
 		staffRoutes.POST("/", ctx.Ctl.UserHandler.Registration)
 		staffRoutes.DELETE("/:id", ctx.Ctl.UserHandler.Delete)
 		staffRoutes.PUT("/:id", ctx.Ctl.UserHandler.Update)
@@ -58,6 +59,33 @@ func NewRoutes(ctx infra.ServiceContext) {
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
+	}
+
+
+	inventoryRoutes := r.Group("/inventory")
+	{
+		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
+		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
+		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
+		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
+  }
+
+	tablesRoutes := r.Group("/tables")
+	{
+		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
+	}
+
+	paymentsRoutes := r.Group("/payments")
+	{
+		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
+	}
+
+	ordersRoutes := r.Group("/orders")
+	{
+		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
+		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
+		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
+		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

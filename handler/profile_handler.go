@@ -28,3 +28,5 @@ func (ctrl *ProfileController) Logout(c *gin.Context) {
 	ctrl.logger.Info("User logged out successfully")
 	GoodResponseWithData(c, "user logged out", http.StatusOK, nil)
 }
+
+

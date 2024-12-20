@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"project/domain"
+	"project/helper"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -37,8 +38,6 @@ func (repo CategoryRepository) All(page, limit int) ([]*domain.Category, int64, 
 	var categories []*domain.Category
 	var totalItems int64
 
-	offset := (page - 1) * limit
-
 	err := repo.db.Model(&domain.Category{}).Count(&totalItems).Error
 	if err != nil {
 		repo.log.Error("Failed to count total categories", zap.Error(err))
@@ -46,15 +45,15 @@ func (repo CategoryRepository) All(page, limit int) ([]*domain.Category, int64, 
 	}
 
 	err = repo.db.Model(&domain.Category{}).
-		Offset(offset).
-		Limit(limit).
+		Order("id").
+		Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&categories).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch categories", zap.Error(err))
 		return nil, 0, err
 	}
 
-	if len(categories) == 0 {
+	if totalItems == 0 {
 		repo.log.Warn("No categories found")
 		return nil, 0, errors.New("no categories found")
 	}
@@ -102,9 +101,8 @@ func (repo CategoryRepository) AllProducts(page, limit int, categoryID string) (
 
 	err := query.Preload("Category", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, name, created_at, updated_at")
-	}).
-		Offset((page - 1) * limit).
-		Limit(limit).
+	}).Order("id").
+		Scopes(helper.Paginate(uint(page), uint(limit))).
 		Find(&products).Error
 	if err != nil {
 		repo.log.Error("Failed to fetch products", zap.Error(err))
