@@ -13,6 +13,7 @@ import (
 type Handler struct {
 	AuthHandler          AuthController
 	PasswordResetHandler PasswordResetController
+	ProfileHandler       ProfileController
 	UserHandler          UserController
 	ReservationHandler   ReservationController
 	NotificationHandler  NotificationController
@@ -26,6 +27,7 @@ func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher
 		AuthHandler:          *NewAuthController(service.Auth, logger, rdb, jwt),
 		PasswordResetHandler: *NewPasswordResetController(service, logger),
 		UserHandler:          *NewUserController(service, logger),
+		ProfileHandler:       *NewProfileController(service, logger, rdb, jwt),
 		ReservationHandler:   *NewReservationController(service.Reservation, logger),
 		NotificationHandler:  *NewNotificationController(service, logger),
 		CategoryHandler:      *NewCategoryController(service.Category, logger),

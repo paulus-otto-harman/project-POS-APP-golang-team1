@@ -26,7 +26,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
-	// r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
+	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
+	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
+	r.PUT("/users/:id/permissions", ctx.Middleware.OnlySuperAdmin(), nil)
 
 	staffRoutes := r.Group("/staffs")
 	{
@@ -57,25 +61,24 @@ func NewRoutes(ctx infra.ServiceContext) {
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
 	}
 
-
 	inventoryRoutes := r.Group("/inventory")
 	{
 		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
 		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
 		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
 		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
-  }
+	}
 
 	tablesRoutes := r.Group("/tables")
 	{
 		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
 	}
-  
+
 	paymentsRoutes := r.Group("/payments")
 	{
 		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
 	}
-  
+
 	ordersRoutes := r.Group("/orders")
 	{
 		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)

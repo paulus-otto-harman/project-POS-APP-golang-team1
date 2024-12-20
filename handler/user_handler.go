@@ -229,7 +229,12 @@ func (ctrl *UserController) Update(c *gin.Context) {
 	var filename string
 	var err error
 
-	userID, err := helper.Uint(c.Param("id"))
+	ID := c.GetString("user-id")
+	if ID == "" {
+		ID = c.Param("id")
+	}
+
+	userID, err := helper.Uint(ID)
 	if err != nil {
 		ctrl.logger.Error("invalid parameter", zap.Error(err))
 		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
