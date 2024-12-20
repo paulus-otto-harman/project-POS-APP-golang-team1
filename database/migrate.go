@@ -79,6 +79,9 @@ func createViews(db *gorm.DB) error {
 	if err = queryOrderDetail(db); err != nil {
 		return err
 	}
+	if err = queryProductDetail(db); err != nil {
+		return err
+	}
 	return err
 }
 
@@ -111,4 +114,14 @@ func queryOrderDetail(db *gorm.DB) error {
 	`)
 
 	return db.Migrator().CreateView("order_details", gorm.ViewOption{Query: query, Replace: true})
+}
+func queryProductDetail(db *gorm.DB) error {
+
+	query := db.Raw(`
+	SELECT p.id, p.image, p.name, p.code_product, p.stock, c.id AS category_id, c."name" AS category, p.price, p.availability
+	FROM products p
+	JOIN categories c ON p.category_id = c.id; 
+	`)
+
+	return db.Migrator().CreateView("product_details", gorm.ViewOption{Query: query, Replace: true})
 }

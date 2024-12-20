@@ -20,7 +20,7 @@ import (
 func NewRoutes(ctx infra.ServiceContext) {
 	r := gin.Default()
 
-	r.Use(ctx.Middleware.Logger())
+	// r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)

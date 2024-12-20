@@ -9,26 +9,16 @@ import (
 )
 
 type Repository struct {
+	Product        ProductRepository
+	UserPermission UserPermissionRepository
 	Auth             AuthRepository
 	PasswordReset    PasswordResetRepository
 	User             UserRepository
 	Reservation      ReservationRepository
 	Notification     NotificationRepository
 	Category         CategoryRepository
+	Order            OrderRepository
 	UserNotification UserNotificationRepository
-	Product          ProductRepository
-  UserPermission   UserPermissionRepository
-
-	Auth          AuthRepository
-	PasswordReset PasswordResetRepository
-	User          UserRepository
-  Reservation      ReservationRepository
-	Notification  NotificationRepository
-	Category      CategoryRepository
-	Order         OrderRepository
-  UserNotification UserNotificationRepository
-	
-
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -39,9 +29,9 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Reservation:      *NewReservationRepository(db, log),
 		Notification:     *NewNotificationRepository(db, log),
 		Category:         *NewCategoryRepository(db, log),
-    Order:         *NewOrderRepository(db, log),
+		Order:            *NewOrderRepository(db, log),
 		UserNotification: *NewUserNotificationRepository(db, log),
 		Product:          *NewProductRepository(db, log),
-    UserPermission:   *NewUserPermissionRepository(db, log),
+		UserPermission:   *NewUserPermissionRepository(db, log),
 	}
 }
