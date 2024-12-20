@@ -22,19 +22,20 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
-	r.POST("/register", ctx.Ctl.UserHandler.Registration)
-	r.GET("/users", ctx.Ctl.UserHandler.All)
-	r.POST("/password-reset", ctx.Ctl.PasswordResetHandler.Create)
-
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
+	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
+	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
+	r.PUT("/users/:id/permissions", ctx.Middleware.OnlySuperAdmin(), nil)
 
 	staffRoutes := r.Group("/staffs")
 	{
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
+		staffRoutes.GET("/:id", ctx.Ctl.UserHandler.GetByID)
 		staffRoutes.POST("/", ctx.Ctl.UserHandler.Registration)
 		staffRoutes.DELETE("/:id", ctx.Ctl.UserHandler.Delete)
 		staffRoutes.PUT("/:id", ctx.Ctl.UserHandler.Update)
@@ -58,6 +59,32 @@ func NewRoutes(ctx infra.ServiceContext) {
 	productsRoutes := r.Group("/products")
 	{
 		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
+	}
+
+	inventoryRoutes := r.Group("/inventory")
+	{
+		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
+		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
+		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
+		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
+	}
+
+	tablesRoutes := r.Group("/tables")
+	{
+		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
+	}
+
+	paymentsRoutes := r.Group("/payments")
+	{
+		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
+	}
+
+	ordersRoutes := r.Group("/orders")
+	{
+		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
+		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
+		ordersRoutes.PUT("/:id", ctx.Ctl.OrderHandler.Update)
+		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
 	notificationRoutes := r.Group("/notifications")

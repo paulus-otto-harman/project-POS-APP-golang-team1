@@ -15,7 +15,9 @@ type Repository struct {
 	Reservation      ReservationRepository
 	Notification     NotificationRepository
 	Category         CategoryRepository
+	Order            OrderRepository
 	UserNotification UserNotificationRepository
+	Product          ProductRepository
 	UserPermission   UserPermissionRepository
 }
 
@@ -27,7 +29,9 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Reservation:      *NewReservationRepository(db, log),
 		Notification:     *NewNotificationRepository(db, log),
 		Category:         *NewCategoryRepository(db, log),
+		Order:            *NewOrderRepository(db, log),
 		UserNotification: *NewUserNotificationRepository(db, log),
+		Product:          *NewProductRepository(db, log),
 		UserPermission:   *NewUserPermissionRepository(db, log),
 	}
 }

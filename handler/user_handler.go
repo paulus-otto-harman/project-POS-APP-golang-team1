@@ -162,11 +162,6 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 		return
 	}
 
-	/*
-		TODO :
-		- if user is an admin sent email default password
-	*/
-
 	if user.Role == "admin" {
 		emailData := struct {
 			DefaultPassword string
@@ -234,7 +229,12 @@ func (ctrl *UserController) Update(c *gin.Context) {
 	var filename string
 	var err error
 
-	userID, err := helper.Uint(c.Param("id"))
+	ID := c.GetString("user-id")
+	if ID == "" {
+		ID = c.Param("id")
+	}
+
+	userID, err := helper.Uint(ID)
 	if err != nil {
 		ctrl.logger.Error("invalid parameter", zap.Error(err))
 		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
@@ -297,4 +297,33 @@ func (ctrl *UserController) Update(c *gin.Context) {
 	}
 
 	GoodResponseWithData(c, "User updated", http.StatusOK, nil)
+}
+
+func (ctrl *UserController) GetByID(c *gin.Context) {
+	userID, err := helper.Uint(c.Param("id"))
+	if err != nil {
+		ctrl.logger.Error("invalid parameter", zap.Error(err))
+		BadResponse(c, "Invalid parameter", http.StatusBadRequest)
+		return
+	}
+
+	userInput := domain.User{
+		ID: userID,
+	}
+
+	user, err := ctrl.service.User.GetByID(userInput)
+	if err != nil {
+		ctrl.logger.Error("Fail to get user", zap.Error(err))
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "User retrieved", http.StatusOK, user)
+}
+
+func (ctrl *UserController) UpdateShiftSchedule() {
+	err := ctrl.service.User.UpdateShift()
+	if err != nil {
+		ctrl.logger.Error("Fail to update user shift schedule", zap.Error(err))
+		return
+	}
 }

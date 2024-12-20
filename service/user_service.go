@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type UserService interface {
@@ -18,6 +19,8 @@ type UserService interface {
 	UpdatePassword(id uuid.UUID, newPassword string) error
 	Delete(id uint) error
 	Update(user domain.User) error
+	GetByID(userInput domain.User) (*domain.User, error)
+	UpdateShift() error
 }
 
 type userService struct {
@@ -34,8 +37,11 @@ func (s *userService) All(sortField, sortDirection string, page, limit uint) ([]
 }
 
 func (s *userService) Register(user *domain.User) error {
-	existedUser := s.repo.User.GetByEmail(user.Email)
-	if existedUser != nil {
+	existedUser, err := s.repo.User.Get(*user)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if existedUser != nil && existedUser.ID != 0 {
 		return errors.New("user email already exists")
 	}
 
@@ -43,7 +49,7 @@ func (s *userService) Register(user *domain.User) error {
 		user.Password = helper.HashPassword(user.Password)
 	}
 
-	err := s.repo.User.Create(user)
+	err = s.repo.User.Create(user)
 	if err != nil {
 		s.log.Error("Error creating user", zap.Error(err))
 		return err
@@ -99,10 +105,68 @@ func (s *userService) Delete(id uint) error {
 }
 
 func (s *userService) Update(user domain.User) error {
-	existedUser := s.repo.User.GetByEmail(user.Email)
+	existedUser, err := s.repo.User.Get(user)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
 	if existedUser != nil && existedUser.ID != user.ID {
 		return errors.New("user email already exists")
 	}
 
 	return s.repo.User.Update(&user)
+}
+
+func (s *userService) GetByID(userInput domain.User) (*domain.User, error) {
+	user, err := s.repo.User.Get(userInput)
+	if err != nil {
+		return nil, err
+	}
+	user.Permissions = nil
+	return user, nil
+}
+
+func (s *userService) UpdateShift() error {
+	// Define the shift schedule
+	shiftSchedule := []Shift{
+		{StartTime: "9am", EndTime: "6pm"},
+		{StartTime: "2pm", EndTime: "11pm"},
+	}
+
+	// Retrieve all users
+	users, _, err := s.repo.User.All("", "", 0, 0)
+	if err != nil {
+		return err
+	}
+
+	// Loop through users to update their shifts
+	for _, user := range users {
+		// Check the current shift of the user and update accordingly
+		switch user.ShiftStart {
+		case shiftSchedule[0].StartTime:
+			user.ShiftStart = shiftSchedule[1].StartTime
+			user.ShiftEnd = shiftSchedule[1].EndTime
+		case shiftSchedule[1].StartTime:
+			user.ShiftStart = shiftSchedule[0].StartTime
+			user.ShiftEnd = shiftSchedule[0].EndTime
+		default:
+			// Default to the first shift schedule if the user's shift doesn't match
+			user.ShiftStart = shiftSchedule[0].StartTime
+			user.ShiftEnd = shiftSchedule[0].EndTime
+		}
+
+		// Update the user in the repository
+		err = s.repo.User.Update(&user)
+		if err != nil {
+			// Log the error and return
+			s.log.Error("Error updating user shift", zap.Error(err), zap.Uint("user_id", user.ID))
+			return err
+		}
+	}
+
+	return nil
+}
+
+type Shift struct {
+	StartTime string
+	EndTime   string
 }
