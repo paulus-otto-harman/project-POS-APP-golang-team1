@@ -16,3 +16,11 @@ func IntToString(num int) string {
 	convStr := strconv.Itoa(num)
 	return convStr
 }
+
+func Float(param string) (float64, error) {
+	f, err := strconv.ParseFloat(param, 64)
+	if err != nil {
+		return 0, err
+	}
+	return f, nil
+}
