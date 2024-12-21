@@ -9,7 +9,7 @@ import (
 
 type RevenueService interface {
 	GetTotalRevenueByStatus() (map[string]interface{}, error)
-	GetMonthlyRevenue() (map[string]float64, error)
+	GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error)
 	GetProductRevenueDetails() ([]*domain.ProductRevenue, error)
 }
 
@@ -18,7 +18,7 @@ type revenueService struct {
 	log  *zap.Logger
 }
 
-func NewRevenueService(repo repository.RevenueRepository, log  *zap.Logger) RevenueService {
+func NewRevenueService(repo repository.RevenueRepository, log *zap.Logger) RevenueService {
 	return &revenueService{repo: repo, log: log}
 }
 
@@ -26,8 +26,8 @@ func (s *revenueService) GetTotalRevenueByStatus() (map[string]interface{}, erro
 	return s.repo.GetTotalRevenueByStatus()
 }
 
-func (s *revenueService) GetMonthlyRevenue() (map[string]float64, error) {
-	return s.repo.GetMonthlyRevenue()
+func (s *revenueService) GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error) {
+	return s.repo.GetMonthlyRevenue(statusPayment, year)
 }
 
 func (s *revenueService) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {

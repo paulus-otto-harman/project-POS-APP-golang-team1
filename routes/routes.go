@@ -103,6 +103,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	{
 		revenueRoutes.GET("/status", ctx.Ctl.RevenueHandler.GetTotalRevenueByStatus)
 		revenueRoutes.GET("/bestsellers", ctx.Ctl.RevenueHandler.GetProductRevenueDetails)
+		revenueRoutes.GET("/monthly_revenue", ctx.Ctl.RevenueHandler.GetMonthlyRevenue)
 
 	}
 

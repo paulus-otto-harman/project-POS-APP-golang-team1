@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"fmt"
 	"project/domain"
+	"strings"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -46,8 +48,44 @@ func (repo RevenueRepository) GetTotalRevenueByStatus() (map[string]interface{},
     return response, nil
 }
 
-func (repo RevenueRepository) GetMonthlyRevenue() (map[string]float64, error) {
+func (repo *RevenueRepository) GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error) {
 	result := make(map[string]float64)
+
+	// Initialize all months with zero values
+	months := []string{
+		"January", "February", "March", "April", "May", "June",
+		"July", "August", "September", "October", "November", "December",
+	}
+	for _, month := range months {
+		result[month] = 0
+	}
+
+	type MonthlyRevenue struct {
+		Month   string  `json:"month"`
+		Revenue float64 `json:"revenue"`
+	}
+
+	var revenues []MonthlyRevenue
+
+	query := repo.db.Table("order_details").
+		Select("TO_CHAR(TO_DATE(date_order, 'FMDay, dd-Mon-yyyy'), 'FMMonth') AS month, SUM(total) AS revenue").
+		Where("EXTRACT(YEAR FROM TO_DATE(date_order, 'FMDay, dd-Mon-yyyy')) = ?", year).
+		Group("TO_CHAR(TO_DATE(date_order, 'FMDay, dd-Mon-yyyy'), 'FMMonth'), EXTRACT(MONTH FROM TO_DATE(date_order, 'FMDay, dd-Mon-yyyy'))").
+		Order("EXTRACT(MONTH FROM TO_DATE(date_order, 'FMDay, dd-Mon-yyyy'))")
+
+	if statusPayment != "" {
+		query = query.Where("status_payment = ?", statusPayment)
+	}
+
+	if err := query.Scan(&revenues).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch revenue data: %w", err)
+	}
+
+	// Update result map with actual values
+	for _, rev := range revenues {
+		month := strings.TrimSpace(rev.Month)
+		result[month] = rev.Revenue
+	}
 
 	return result, nil
 }
