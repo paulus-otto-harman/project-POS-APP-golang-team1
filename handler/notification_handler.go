@@ -32,7 +32,7 @@ func NewNotificationController(service service.Service, logger *zap.Logger) *Not
 func (ctrl *NotificationController) All(c *gin.Context) {
 	status := c.Query("status")
 
-	user_id := c.Param("user_id")
+	user_id := c.GetString("user-id")
 	userID, err := helper.Uint(user_id)
 	if err != nil {
 		ctrl.logger.Error("Invalid notification ID", zap.Error(err))
