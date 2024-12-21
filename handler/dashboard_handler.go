@@ -25,9 +25,9 @@ func NewDashboardController(service service.DashboardService, logger *zap.Logger
 // @Success 200 {object} domain.Dashboard "dashboard summary fetched successfully"
 // @Failure 500 {object} Response "internal server error"
 // @Router /dashboard/summary [get]
-func (h *DashboardController) GetDashboardSummary(c *gin.Context) {
+func (h *DashboardController) GetDashboard(c *gin.Context) {
 	// Call the service method to get the dashboard summary
-	summary, err := h.service.GetDashboardSummary()
+	summary, err := h.service.GetDashboard()
 	if err != nil {
 		h.logger.Error("Failed to get dashboard summary", zap.Error(err))
 		BadResponse(c, "Failed to get dashboard summary", http.StatusNotFound)

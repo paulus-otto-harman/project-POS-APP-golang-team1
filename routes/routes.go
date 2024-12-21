@@ -70,7 +70,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	}
 	dashboardRoutes := r.Group("/dashboard")
 	{
-		dashboardRoutes.GET("/", ctx.Ctl.DashboardHandler.GetDashboardSummary)
+		dashboardRoutes.GET("/", ctx.Ctl.DashboardHandler.GetDashboard)
 
 	}
 
