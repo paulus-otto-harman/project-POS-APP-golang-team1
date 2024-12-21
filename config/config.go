@@ -14,6 +14,8 @@ type Config struct {
 	ServerPort      string
 	ShutdownTimeout int
 
+	ProfitMargin float64
+
 	PrivateKey string
 	PublicKey  string
 }
@@ -72,6 +74,8 @@ func LoadConfig() (Config, error) {
 		PrivateKey:      viper.GetString("PRIVATE_KEY"),
 		PublicKey:       viper.GetString("PUBLIC_KEY"),
 
+		ProfitMargin: viper.GetFloat64("PROFIT_MARGIN"),
+
 		RedisConfig: loadRedisConfig(),
 	}
 	return config, nil
@@ -115,6 +119,8 @@ func setDefaultValues() {
 	viper.SetDefault("APP_SECRET", "team-1")
 	viper.SetDefault("SERVER_PORT", ":8080")
 	viper.SetDefault("SHUTDOWN_TIMEOUT", 5)
+
+	viper.SetDefault("PROFIT_MARGIN", 10.00)
 
 	viper.SetDefault("DB_MIGRATE", false)
 	viper.SetDefault("DB_SEEDING", false)

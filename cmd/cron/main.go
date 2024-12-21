@@ -67,7 +67,7 @@ func sendNotificationLowStock(c *cron.Cron, ctx *infra.ServiceContext) error {
 
 func addBestSeller(c *cron.Cron, ctx *infra.ServiceContext) error {
 	_, err := c.AddFunc("* * * * *", func() {
-		log.Println("Adding best seller...")
+		//ctx.Ctl.
 	})
 
 	if err != nil {

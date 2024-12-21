@@ -95,6 +95,13 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
 	}
 
+	reportRoutes := r.Group("/reports")
+	{
+		reportRoutes.GET("/bestsellers", func(c *gin.Context) {
+			c.JSON(200, gin.H{})
+		})
+	}
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
