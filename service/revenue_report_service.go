@@ -8,7 +8,7 @@ import (
 )
 
 type RevenueService interface {
-	GetTotalRevenueByStatus() (map[string]float64, error)
+	GetTotalRevenueByStatus() (map[string]interface{}, error)
 	GetMonthlyRevenue() (map[string]float64, error)
 	GetProductRevenueDetails() ([]*domain.ProductRevenue, error)
 }
@@ -22,7 +22,7 @@ func NewRevenueService(repo repository.RevenueRepository, log  *zap.Logger) Reve
 	return &revenueService{repo: repo, log: log}
 }
 
-func (s *revenueService) GetTotalRevenueByStatus() (map[string]float64, error) {
+func (s *revenueService) GetTotalRevenueByStatus() (map[string]interface{}, error) {
 	return s.repo.GetTotalRevenueByStatus()
 }
 

@@ -20,13 +20,13 @@ import (
 func NewRoutes(ctx infra.ServiceContext) {
 	r := gin.Default()
 
-	// r.Use(ctx.Middleware.Logger())
+	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
-	r.Use(ctx.Middleware.Jwt.AuthJWT())
+	// r.Use(ctx.Middleware.Jwt.AuthJWT())
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
 	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
@@ -93,6 +93,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
 		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
+	}
+	revenueRoutes := r.Group("/revenues")
+	{
+		revenueRoutes.GET("/total", ctx.Ctl.RevenueController.GetTotalRevenueByStatus)
+
 	}
 
 	reportRoutes := r.Group("/reports")

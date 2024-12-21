@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/http"
 	"project/service"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,12 @@ func NewRevenueController(service service.RevenueService, logger  *zap.Logger) *
 }
 
 func (h *RevenueController) GetTotalRevenueByStatus(c *gin.Context) {
-	
+	data, err := h.service.GetTotalRevenueByStatus()
+	if err != nil {
+		BadResponse(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	GoodResponseWithData(c, "fetch success", http.StatusOK, data)
 }
 
 func (h *RevenueController) GetMonthlyRevenue(c *gin.Context) {
