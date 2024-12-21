@@ -51,3 +51,4 @@ type OrderItem struct {
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at" swaggerignore:"true"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at" swaggerignore:"true"`
 }
+
