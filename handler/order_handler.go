@@ -30,6 +30,7 @@ func NewOrderController(service service.OrderService, logger *zap.Logger) *Order
 // @Success 200 {object} domain.DataPage{data=[]domain.Table} "fetch success"
 // @Failure 404 {object} Response "tables not found"
 // @Failure 500 {object} Response "internal server error"
+// @Security Bearer
 // @Router /tables/ [get]
 func (ctrl *OrderController) AllTables(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
@@ -58,6 +59,7 @@ func (ctrl *OrderController) AllTables(c *gin.Context) {
 // @Success 200 {object} Response{data=[]domain.PaymentMethod} "fetch success"
 // @Failure 404 {object} Response "payments not found"
 // @Failure 500 {object} Response "internal server error"
+// @Security Bearer
 // @Router /payments/ [get]
 func (ctrl *OrderController) AllPayments(c *gin.Context) {
 
@@ -89,6 +91,7 @@ type orderRequest struct {
 // @Success 201 {object} Response "Order created successfully"
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 500 {object} Response "Internal server error"
+// @Security Bearer
 // @Router /orders/ [post]
 func (ctrl *OrderController) Create(c *gin.Context) {
 
@@ -128,6 +131,7 @@ type updateOrderRequest struct {
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 404 {object} Response "Order not found"
 // @Failure 500 {object} Response "Internal server error"
+// @Security Bearer
 // @Router /orders/{id} [put]
 func (ctrl *OrderController) Update(c *gin.Context) {
 
@@ -147,13 +151,18 @@ func (ctrl *OrderController) Update(c *gin.Context) {
 		return
 	}
 
+	if input.StatusPayment != domain.OrderInProcess {
+		BadResponse(c, "cannot update if status payment cancelled or completed", http.StatusBadRequest)
+		return
+	}
+
 	input.Name = request.Name
 	input.TableID = request.TableID
 	input.PaymentMethodID = request.PaymentMethodID
 	input.OrderItems = request.OrderItems
 	input.StatusPayment = domain.StatusPayment(request.StatusPayment)
 	input.StatusKitchen = domain.StatusKitchen(request.StatusKitchen)
-	
+
 	err := ctrl.service.Update(&input)
 	if err != nil {
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
@@ -204,6 +213,7 @@ type orderItemResponse struct {
 // @Success 200 {object} domain.DataPage{data=[]orderResponse} "fetch success"
 // @Failure 404 {object} Response "Orders not found"
 // @Failure 500 {object} Response "Internal server error"
+// @Security Bearer
 // @Router /orders [get]
 func (ctrl *OrderController) AllOrders(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
@@ -237,6 +247,7 @@ func (ctrl *OrderController) AllOrders(c *gin.Context) {
 // @Failure 400 {object} Response "Order cannot be deleted because the payment status is not 'In Process'"
 // @Failure 404 {object} Response "Order not found"
 // @Failure 500 {object} Response "Internal server error"
+// @Security Bearer
 // @Router /orders/{id} [delete]
 func (ctrl *OrderController) Delete(c *gin.Context) {
 	id := c.Param("id")
@@ -249,7 +260,7 @@ func (ctrl *OrderController) Delete(c *gin.Context) {
 	}
 
 	if order.StatusPayment != domain.OrderInProcess {
-		ctrl.logger.Error( "Order cannot be deleted because the payment status is not 'In Process'.", zap.String("status_payment: ", string(order.StatusPayment)))
+		ctrl.logger.Error("Order cannot be deleted because the payment status is not 'In Process'.", zap.String("status_payment: ", string(order.StatusPayment)))
 		BadResponse(c, "Order cannot be deleted because the payment status is not 'In Process'. current status payment: "+string(order.StatusPayment), http.StatusBadRequest)
 		return
 	}

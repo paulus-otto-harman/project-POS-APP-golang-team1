@@ -211,23 +211,7 @@ func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
 	if err := overWriteOrderItem(tx, o.ID, o.OrderItems); err != nil {
 		return err
 	}
-	// var existingItems []OrderItem
-	// if err := tx.Where("order_id = ?", o.ID).Find(&existingItems).Error; err != nil {
-	// 	return fmt.Errorf("failed to retrieve existing order items: %v", err)
-	// }
-
-	// newItemIDs := make(map[uint]bool)
-	// for _, item := range o.OrderItems {
-	// 	newItemIDs[item.ID] = true
-	// }
-
-	// for _, existingItem := range existingItems {
-	// 	if !newItemIDs[existingItem.ID] {
-	// 		if err := tx.Delete(&existingItem).Error; err != nil {
-	// 			return fmt.Errorf("failed to delete removed order item: %v", err)
-	// 		}
-	// 	}
-	// }
+	
 	return nil
 }
 
