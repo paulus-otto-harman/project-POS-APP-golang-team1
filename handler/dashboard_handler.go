@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/csv"
+	"fmt"
 	"net/http"
 	"project/service"
 
@@ -34,4 +36,33 @@ func (h *DashboardController) GetDashboard(c *gin.Context) {
 		return
 	}
 	GoodResponseWithData(c, "Success", http.StatusOK, summary)
+}
+
+func (h *DashboardController) ExportSalesDataCSV(c *gin.Context) {
+	// Fetch sales data per month from existing service
+	dashboardSummary, err := h.service.GetDashboard() // Adjust the limit and page as needed
+	if err != nil {
+		BadResponse(c, fmt.Sprintf("Error fetching data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare CSV writer
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment;filename=sales_data.csv")
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	// Write CSV Header
+	writer.Write([]string{"Bulan", "Jumlah Order", "Sales", "Revenue"})
+
+	// Convert MonthlyOrderCount to float64 before multiplying
+	revenue := float64(dashboardSummary.MonthlyOrderCount) * dashboardSummary.MonthlySales
+
+	// Write data to CSV
+	writer.Write([]string{
+		"2024-12", // Replace with actual month value if available
+		fmt.Sprintf("%d", dashboardSummary.MonthlyOrderCount), // Jumlah Order
+		fmt.Sprintf("%.2f", dashboardSummary.MonthlySales),    // Sales
+		fmt.Sprintf("%.2f", revenue),                          // Revenue (calculated)
+	})
 }

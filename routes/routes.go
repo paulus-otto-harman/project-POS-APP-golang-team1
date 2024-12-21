@@ -71,6 +71,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	dashboardRoutes := r.Group("/dashboard")
 	{
 		dashboardRoutes.GET("/", ctx.Ctl.DashboardHandler.GetDashboard)
+		dashboardRoutes.GET("/export", ctx.Ctl.DashboardHandler.ExportSalesDataCSV)
 
 	}
 

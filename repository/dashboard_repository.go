@@ -19,8 +19,8 @@ func NewDashboardRepository(db *gorm.DB, log *zap.Logger) *DashboardRepository {
 	return &DashboardRepository{db: db, log: log}
 }
 
-func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
-	var summary domain.Dashboard
+// FetchSummary retrieves summary data (daily sales, monthly sales, and table occupancy).
+func (repo *DashboardRepository) FetchSummary() (float64, float64, float64, error) {
 	var dailySales, monthlySales float64
 	var totalTables, occupiedTables int64
 
@@ -36,7 +36,7 @@ func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
 		Joins("JOIN products ON order_items.product_id = products.id").
 		Scan(&dailySales).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch daily sales: %v", err)
+		return 0, 0, 0, fmt.Errorf("failed to fetch daily sales: %v", err)
 	}
 
 	// Monthly Sales Query
@@ -47,14 +47,13 @@ func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
 		Joins("JOIN products ON order_items.product_id = products.id").
 		Scan(&monthlySales).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch monthly sales: %v", err)
+		return 0, 0, 0, fmt.Errorf("failed to fetch monthly sales: %v", err)
 	}
 
 	// Total Tables Query
 	err = repo.db.Model(&domain.Table{}).Count(&totalTables).Error
 	if err != nil {
-		repo.log.Error("Error fetching total tables", zap.Error(err))
-		return nil, fmt.Errorf("failed to fetch total tables: %v", err)
+		return 0, 0, 0, fmt.Errorf("failed to fetch total tables: %v", err)
 	}
 
 	// Occupied Tables Query
@@ -63,16 +62,20 @@ func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
 		Joins("JOIN tables ON orders.table_id = tables.id").
 		Count(&occupiedTables).Error
 	if err != nil {
-		repo.log.Error("Error fetching occupied tables", zap.Error(err))
-		return nil, fmt.Errorf("failed to fetch occupied tables: %v", err)
+		return 0, 0, 0, fmt.Errorf("failed to fetch occupied tables: %v", err)
 	}
 
 	// Calculate occupancy percentage
 	occupancyPercentage := (float64(occupiedTables) / float64(totalTables)) * 100
 
-	// Popular Products Query
+	return dailySales, monthlySales, occupancyPercentage, nil
+}
+
+// FetchPopularProducts retrieves the most popular products.
+func (repo *DashboardRepository) FetchPopularProducts() ([]domain.PopularNewResponse, error) {
 	var popularProducts []domain.PopularNewResponse
-	err = repo.db.Model(&domain.Order{}).
+
+	err := repo.db.Model(&domain.Order{}).
 		Where("orders.status_payment = ?", domain.OrderCompleted).
 		Select(`
 			products.name,
@@ -91,10 +94,15 @@ func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
 		return nil, fmt.Errorf("failed to fetch popular products: %v", err)
 	}
 
-	// New Products Query
+	return popularProducts, nil
+}
+
+// FetchNewProducts retrieves new products added within the last 30 days.
+func (repo *DashboardRepository) FetchNewProducts() ([]domain.PopularNewResponse, error) {
 	var newProducts []domain.PopularNewResponse
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-	err = repo.db.Model(&domain.Product{}).
+
+	err := repo.db.Model(&domain.Product{}).
 		Where("products.created_at >= ?", thirtyDaysAgo).
 		Select(`
 			products.name,
@@ -110,16 +118,51 @@ func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
 		return nil, fmt.Errorf("failed to fetch new products: %v", err)
 	}
 
+	return newProducts, nil
+}
+
+// GetDashboard aggregates data for the dashboard.
+func (repo *DashboardRepository) GetDashboard() (*domain.Dashboard, error) {
+	// Fetch summary
+	dailySales, monthlySales, tableOccupancy, err := repo.FetchSummary()
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch popular products
+	popularProducts, err := repo.FetchPopularProducts()
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch new products
+	newProducts, err := repo.FetchNewProducts()
+	if err != nil {
+		return nil, err
+	}
+
+	// Count monthly orders
+	month := time.Now().Format("2006-01")
+	var monthlyOrderCount int64
+	err = repo.db.Model(&domain.Order{}).
+		Where("TO_CHAR(orders.created_at, 'YYYY-MM') = ? AND orders.status_payment = ?", month, domain.OrderCompleted).
+		Count(&monthlyOrderCount).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch monthly order count: %v", err)
+	}
+
 	// Set summary
-	summary.DailySales = dailySales
-	summary.MonthlySales = monthlySales
-	summary.TableOccupancy = occupancyPercentage
-	summary.PopularDish = popularProducts
-	summary.NewDish = newProducts
+	summary := &domain.Dashboard{
+		DailySales:        dailySales,
+		MonthlySales:      monthlySales,
+		TableOccupancy:    tableOccupancy,
+		PopularDish:       popularProducts,
+		NewDish:           newProducts,
+		MonthlyOrderCount: monthlyOrderCount,
+	}
 
 	// Logging
-	repo.log.Info("Fetched popular dishes", zap.Any("dishes", popularProducts))
-	repo.log.Info("Fetched new dishes", zap.Any("dishes", newProducts))
+	repo.log.Info("Fetched dashboard data", zap.Any("summary", summary))
 
-	return &summary, nil
+	return summary, nil
 }
