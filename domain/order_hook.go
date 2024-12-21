@@ -210,6 +210,7 @@ func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
 	if err := overWriteOrderItem(tx, o.ID, o.OrderItems); err != nil {
 		return err
 	}
+  
 	return nil
 }
 
