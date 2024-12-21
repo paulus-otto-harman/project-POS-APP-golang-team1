@@ -30,6 +30,7 @@ func NewCategoryController(service service.CategoryService, logger *zap.Logger) 
 // @Success 200 {object} domain.DataPage{data=[]domain.Category} "fetch success"
 // @Failure 404 {object} Response "categories not found"
 // @Failure 500 {object} Response "internal server error"
+// @Security Bearer
 // @Router /categories/ [get]
 func (ctrl *CategoryController) All(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
@@ -66,6 +67,7 @@ type CategoryRequest struct {
 // @Success 201 {object} Response "create success"
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 500 {object} Response "Internal server error"
+// @Security Bearer
 // @Router /categories/create [post]
 func (ctrl *CategoryController) Create(c *gin.Context) {
 
@@ -136,6 +138,7 @@ func (ctrl *CategoryController) Create(c *gin.Context) {
 // @Failure 400 {object} Response "file icon is missing"
 // @Failure 404 {object} Response "category not found"
 // @Failure 500 {object} Response "internal server error"
+// @Security Bearer
 // @Router /categories/{id} [put]
 func (ctrl *CategoryController) Update(c *gin.Context) {
 
@@ -210,6 +213,7 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 // @Success 200 {object} domain.DataPage{data=[]domain.ProductDetail} "fetch success"
 // @Failure 404 {object} Response "categories not found"
 // @Failure 500 {object} Response "internal server error"
+// @Security Bearer
 // @Router /products/ [get]
 func (ctrl *CategoryController) AllProducts(c *gin.Context) {
 	page, _ := helper.Uint(c.DefaultQuery("page", "1"))
