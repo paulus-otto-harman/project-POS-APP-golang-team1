@@ -30,7 +30,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
 	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
-	r.PUT("/users/:id/permissions", ctx.Middleware.OnlySuperAdmin(), nil)
+	r.PUT("/users/:id", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserPermissionHandler.Update)
 
 	staffRoutes := r.Group("/staffs")
 	{

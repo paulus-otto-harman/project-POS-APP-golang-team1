@@ -11,28 +11,30 @@ import (
 )
 
 type Handler struct {
-	AuthHandler          AuthController
-	PasswordResetHandler PasswordResetController
-	ProfileHandler       ProfileController
-	UserHandler          UserController
-	ReservationHandler   ReservationController
-	NotificationHandler  NotificationController
-	CategoryHandler      CategoryController
-	ProductHandler       ProductController
-	OrderHandler         OrderController
+	AuthHandler           AuthController
+	PasswordResetHandler  PasswordResetController
+	ProfileHandler        ProfileController
+	UserHandler           UserController
+	ReservationHandler    ReservationController
+	NotificationHandler   NotificationController
+	CategoryHandler       CategoryController
+	ProductHandler        ProductController
+	OrderHandler          OrderController
+	UserPermissionHandler UserPermissionController
 }
 
 func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher, jwt jwt.JWT) *Handler {
 	return &Handler{
-		AuthHandler:          *NewAuthController(service.Auth, logger, rdb, jwt),
-		PasswordResetHandler: *NewPasswordResetController(service, logger),
-		UserHandler:          *NewUserController(service, logger),
-		ProfileHandler:       *NewProfileController(service, logger, rdb, jwt),
-		ReservationHandler:   *NewReservationController(service.Reservation, logger),
-		NotificationHandler:  *NewNotificationController(service, logger),
-		CategoryHandler:      *NewCategoryController(service.Category, logger),
-		ProductHandler:       *NewProductController(service.Product, logger),
-		OrderHandler:         *NewOrderController(service.Order, logger),
+		AuthHandler:           *NewAuthController(service.Auth, logger, rdb, jwt),
+		PasswordResetHandler:  *NewPasswordResetController(service, logger),
+		UserHandler:           *NewUserController(service, logger),
+		ProfileHandler:        *NewProfileController(service, logger, rdb, jwt),
+		ReservationHandler:    *NewReservationController(service.Reservation, logger),
+		NotificationHandler:   *NewNotificationController(service, logger),
+		CategoryHandler:       *NewCategoryController(service.Category, logger),
+		ProductHandler:        *NewProductController(service.Product, logger),
+		OrderHandler:          *NewOrderController(service.Order, logger),
+		UserPermissionHandler: *NewUserPermissionController(service.UserPermission, logger),
 	}
 }
 
