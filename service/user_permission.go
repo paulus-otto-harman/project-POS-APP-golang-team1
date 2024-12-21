@@ -7,7 +7,7 @@ import (
 )
 
 type UserPermissionService interface {
-	Update(userID uint, permissions []string) error
+	Update(userID uint, permissions []uint) error
 }
 type userPermissionService struct {
 	repo repository.UserPermissionRepository
@@ -18,10 +18,10 @@ func NewUserPermissionService(repo repository.UserPermissionRepository, log *zap
 	return &userPermissionService{repo, log}
 }
 
-func (s *userPermissionService) Update(userID uint, permissions []string) error {
+func (s *userPermissionService) Update(userID uint, permissions []uint) error {
 	var newPermissions []domain.Permission
 	for _, permission := range permissions {
-		newPermissions = append(newPermissions, domain.Permission{Name: permission})
+		newPermissions = append(newPermissions, domain.Permission{ID: permission})
 	}
 	user := domain.User{ID: userID, Permissions: newPermissions}
 	return s.repo.Update(user)

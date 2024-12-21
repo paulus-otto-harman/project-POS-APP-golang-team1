@@ -28,6 +28,15 @@ func (repo UserPermissionRepository) Create(userPermission domain.UserPermission
 }
 
 func (repo UserPermissionRepository) Update(user domain.User) error {
-	log.Println(user.Permissions)
-	return nil
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		searchUser := &domain.User{ID: user.ID}
+		if err := tx.Model(searchUser).Association("Permissions").Clear(); err != nil {
+			return err
+		}
+		log.Println(user.Permissions)
+		if err := tx.Model(searchUser).Association("Permissions").Append(user.Permissions); err != nil {
+			return err
+		}
+		return nil
+	})
 }

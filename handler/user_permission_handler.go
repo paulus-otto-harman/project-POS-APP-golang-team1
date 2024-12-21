@@ -34,5 +34,5 @@ func (ctrl *UserPermissionController) Update(c *gin.Context) {
 }
 
 type Permission struct {
-	Permissions []string `json:"permissions" binding:"required"`
+	Permissions []uint `json:"permissions" binding:"required"`
 }
