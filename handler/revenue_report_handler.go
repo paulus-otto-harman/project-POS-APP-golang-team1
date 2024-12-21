@@ -19,9 +19,10 @@ func NewRevenueController(service service.RevenueService, logger *zap.Logger) *R
 	return &RevenueController{service: service, logger: logger}
 }
 
-func (h *RevenueController) GetTotalRevenueByStatus(c *gin.Context) {
-	data, err := h.service.GetTotalRevenueByStatus()
+func (ctrl *RevenueController) GetTotalRevenueByStatus(c *gin.Context) {
+	data, err := ctrl.service.GetTotalRevenueByStatus()
 	if err != nil {
+		ctrl.logger.Error("failed fetch", zap.Error(err))
 		BadResponse(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -29,12 +30,12 @@ func (h *RevenueController) GetTotalRevenueByStatus(c *gin.Context) {
 }
 
 // GetMonthlyRevenue handles the monthly revenue chart request
-func (h *RevenueController) GetMonthlyRevenue(c *gin.Context) {
+func (ctrl *RevenueController) GetMonthlyRevenue(c *gin.Context) {
 	// Retrieve query parameters
 	statusPayment := c.Query("status_payment")
 	year, err := helper.Uint(c.Query("year"))
 	if err != nil {
-		h.logger.Error("Invalid year", zap.Error(err))
+		ctrl.logger.Error("Invalid year", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid year"})
 		return
 	}
@@ -45,9 +46,9 @@ func (h *RevenueController) GetMonthlyRevenue(c *gin.Context) {
 	}
 
 	// Fetch revenue data for the provided status or all statuses combined
-	result, err := h.service.GetMonthlyRevenue(statusPayment, int(year))
+	result, err := ctrl.service.GetMonthlyRevenue(statusPayment, int(year))
 	if err != nil {
-		h.logger.Error("Failed to get monthly revenue",
+		ctrl.logger.Error("Failed to get monthly revenue",
 			zap.String("status", statusPayment),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch revenue data"})
@@ -76,6 +77,6 @@ type MonthlyRevenueResponse struct {
 	Year    uint               `json:"year"`
 }
 
-func (h *RevenueController) GetProductRevenueDetails(c *gin.Context) {
+func (ctrl *RevenueController) GetProductRevenueDetails(c *gin.Context) {
 
 }
