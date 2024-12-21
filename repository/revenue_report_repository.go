@@ -90,9 +90,9 @@ func (repo *RevenueRepository) GetMonthlyRevenue(statusPayment string, year int)
 	return result, nil
 }
 
-func (repo *RevenueRepository) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {
-	var products []*domain.ProductRevenue
-
+func (repo *RevenueRepository) GetProductRevenueDetails() ([]*domain.BestSeller, error) {
+	var products []*domain.BestSeller
+	repo.db.Preload("Product.Category").Find(&products)
 	return products, nil
 }
 

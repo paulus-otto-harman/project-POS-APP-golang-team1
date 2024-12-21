@@ -10,7 +10,7 @@ import (
 type RevenueService interface {
 	GetTotalRevenueByStatus() (map[string]interface{}, error)
 	GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error)
-	GetProductRevenueDetails() ([]*domain.ProductRevenue, error)
+	GetProductRevenueDetails() ([]*domain.BestSeller, error)
 	AddDailyBestSeller(profitMargin float64)
 }
 
@@ -31,7 +31,7 @@ func (s *revenueService) GetMonthlyRevenue(statusPayment string, year int) (map[
 	return s.repo.GetMonthlyRevenue(statusPayment, year)
 }
 
-func (s *revenueService) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {
+func (s *revenueService) GetProductRevenueDetails() ([]*domain.BestSeller, error) {
 	return s.repo.GetProductRevenueDetails()
 }
 

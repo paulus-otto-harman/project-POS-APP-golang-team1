@@ -78,6 +78,8 @@ type MonthlyRevenueResponse struct {
 }
 
 func (ctrl *RevenueController) GetProductRevenueDetails(c *gin.Context) {
+	bestsellers, _ := ctrl.service.GetProductRevenueDetails()
+	GoodResponseWithData(c, "daily best seller retrieved", http.StatusOK, bestsellers)
 
 }
 
