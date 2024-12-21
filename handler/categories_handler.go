@@ -50,6 +50,11 @@ func (ctrl *CategoryController) All(c *gin.Context) {
 	GoodResponseWithPage(c, "fetch success", http.StatusOK, int(totalItems), int(totalPages), int(page), int(limit), categories)
 }
 
+type CategoryRequest struct {
+	Name        string `json:"name" binding:"required,min=3" form:"name"`
+	Description string `json:"description" binding:"required,min=20" form:"description"`
+}
+
 // @Summary Create Category
 // @Description Create a new category with an icon
 // @Tags Categories
@@ -58,7 +63,7 @@ func (ctrl *CategoryController) All(c *gin.Context) {
 // @Param name formData string true "Category name"
 // @Param description formData string false "Category description"
 // @Param icon formData file true "Category icon"
-// @Success 201 {object} Response{data=domain.Category} "create success"
+// @Success 201 {object} Response "create success"
 // @Failure 400 {object} Response "Invalid input"
 // @Failure 500 {object} Response "Internal server error"
 // @Router /categories/create [post]
@@ -70,34 +75,33 @@ func (ctrl *CategoryController) Create(c *gin.Context) {
 	var err error
 
 	fileHeader, err = c.FormFile("icon")
-	if err == nil {
-
-		file, err = fileHeader.Open()
-		if err != nil {
-			ctrl.logger.Error("Failed to open file", zap.Error(err))
-			BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-		filename = fileHeader.Filename
-		ctrl.logger.Info("Received new file", zap.String("filename", filename))
-	}
-	if fileHeader == nil {
-		ctrl.logger.Error("File icon is missing")
+	if err != nil {
+		ctrl.logger.Error("File icon is missing", zap.Error(err))
 		BadResponse(c, "File icon is required", http.StatusBadRequest)
 		return
 	}
+
+	file, err = fileHeader.Open()
 	if err != nil {
-		ctrl.logger.Error("Failed to get file from request", zap.Error(err))
-		BadResponse(c, "Failed get data: "+err.Error(), http.StatusBadRequest)
+		ctrl.logger.Error("Failed to open file", zap.Error(err))
+		BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	filename = fileHeader.Filename
+	ctrl.logger.Info("Received new file", zap.String("filename", filename))
+
+	var input CategoryRequest
+	if err := c.ShouldBind(&input); err != nil {
+		ctrl.logger.Error("Invalid input", zap.Error(err))
+		BadResponse(c, helper.FormatValidationError(err), http.StatusBadRequest)
 		return
 	}
 
-	var category domain.Category
-	if err := c.ShouldBind(&category); err != nil {
-		ctrl.logger.Error("Invalid input", zap.Error(err))
-		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)
-		return
+	category := &domain.Category{
+		Name:        input.Name,
+		Description: input.Description,
 	}
 
 	if file != nil {
@@ -109,13 +113,13 @@ func (ctrl *CategoryController) Create(c *gin.Context) {
 		category.Icon = newIconURL
 	}
 
-	if err := ctrl.service.Create(&category); err != nil {
+	if err := ctrl.service.Create(category); err != nil {
 		ctrl.logger.Error("Failed to create category", zap.Error(err))
 		BadResponse(c, "Failed to create category: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	GoodResponseWithData(c, "create success", http.StatusCreated, category)
+	GoodResponseWithData(c, "create success", http.StatusCreated, nil)
 }
 
 // @Summary Update Category
@@ -150,23 +154,27 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 	var err error
 
 	fileHeader, err = c.FormFile("icon")
-	if err == nil {
-
-		file, err = fileHeader.Open()
-		if err != nil {
-			ctrl.logger.Error("Failed to open file", zap.Error(err))
-			BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-		filename = fileHeader.Filename
-		ctrl.logger.Info("Received new file", zap.String("filename", filename))
+	if err != nil {
+		ctrl.logger.Error("File icon is missing", zap.Error(err))
+		BadResponse(c, "File icon is required", http.StatusBadRequest)
+		return
 	}
 
-	
-	if err := c.ShouldBind(&category); err != nil {
+	file, err = fileHeader.Open()
+	if err != nil {
+		ctrl.logger.Error("Failed to open file", zap.Error(err))
+		BadResponse(c, "Failed to open file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	filename = fileHeader.Filename
+	ctrl.logger.Info("Received new file", zap.String("filename", filename))
+
+	var input CategoryRequest
+	if err := c.ShouldBind(&input); err != nil {
 		ctrl.logger.Error("Invalid input", zap.Error(err))
-		BadResponse(c, "Invalid category data: "+err.Error(), http.StatusBadRequest)
+		BadResponse(c, helper.FormatValidationError(err), http.StatusBadRequest)
 		return
 	}
 
@@ -179,9 +187,12 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 		category.Icon = newIconURL
 	}
 
+	category.Name = input.Name
+	category.Description = input.Description
+
 	if err := ctrl.service.Update(&category); err != nil {
 		ctrl.logger.Error("Failed to update category", zap.Error(err))
-		BadResponse(c, "Failed to update category: "+err.Error(), http.StatusInternalServerError)
+		BadResponse(c, "Failed to update category: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -196,7 +207,7 @@ func (ctrl *CategoryController) Update(c *gin.Context) {
 // @Param page query int false "Page number, default is 1"
 // @Param limit query int false "Number of items per page, default is 10"
 // @Param category_id query string false "Category ID to filter products"
-// @Success 200 {object} domain.DataPage{data=[]domain.Product} "fetch success"
+// @Success 200 {object} domain.DataPage{data=[]domain.ProductDetail} "fetch success"
 // @Failure 404 {object} Response "categories not found"
 // @Failure 500 {object} Response "internal server error"
 // @Router /products/ [get]

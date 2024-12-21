@@ -5,10 +5,11 @@ import "project/domain"
 func Permission() []domain.Permission {
 	return []domain.Permission{
 		{Name: "Dashboard"},
-		{Name: "Reports"},
+		{Name: "Menu"},
+		{Name: "Staff"},
 		{Name: "Inventory"},
+		{Name: "Reports"},
 		{Name: "Orders"},
-		{Name: "Customers"},
-		{Name: "Settings"},
+		{Name: "Reservations"},
 	}
 }
