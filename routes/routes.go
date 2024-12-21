@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -20,7 +21,10 @@ import (
 func NewRoutes(ctx infra.ServiceContext) {
 	r := gin.Default()
 
-	// r.Use(ctx.Middleware.Logger())
+	r.Static("/static", "./static")
+	r.Use(cors.Default())
+
+	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
@@ -93,6 +97,14 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
 		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
+	}
+
+	revenueRoutes := r.Group("/revenue-reports")
+	{
+		revenueRoutes.GET("/status", ctx.Ctl.RevenueHandler.GetTotalRevenueByStatus)
+		revenueRoutes.GET("/bestsellers", ctx.Ctl.RevenueHandler.GetProductRevenueDetails)
+		revenueRoutes.GET("/monthly_revenue", ctx.Ctl.RevenueHandler.GetMonthlyRevenue)
+
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

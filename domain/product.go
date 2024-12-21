@@ -21,3 +21,8 @@ type Product struct {
 	DeletedAt    *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 }
 
+type ProductRevenue struct {
+	ProductID    uint    `json:"product_id"`
+	ProductName  string  `json:"product_name"`
+	TotalRevenue float64 `json:"total_revenue"`
+}

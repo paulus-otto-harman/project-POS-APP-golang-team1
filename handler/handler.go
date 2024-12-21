@@ -21,6 +21,7 @@ type Handler struct {
 	ProductHandler        ProductController
 	OrderHandler          OrderController
 	UserPermissionHandler UserPermissionController
+	RevenueHandler        RevenueController
 }
 
 func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher, jwt jwt.JWT) *Handler {
@@ -35,6 +36,7 @@ func NewHandler(service service.Service, logger *zap.Logger, rdb database.Cacher
 		ProductHandler:        *NewProductController(service.Product, logger),
 		OrderHandler:          *NewOrderController(service.Order, logger),
 		UserPermissionHandler: *NewUserPermissionController(service.UserPermission, logger),
+		RevenueHandler:        *NewRevenueController(service.Revenue, logger),
 	}
 }
 
