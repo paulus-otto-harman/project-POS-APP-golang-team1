@@ -7,23 +7,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type RevenueHandler struct {
+type RevenueController struct {
 	service service.RevenueService
 	logger  *zap.Logger
 }
 
-func NewRevenueHandler(service service.RevenueService, logger  *zap.Logger) *RevenueHandler {
-	return &RevenueHandler{service: service, logger: logger}
+func NewRevenueController(service service.RevenueService, logger  *zap.Logger) *RevenueController {
+	return &RevenueController{service: service, logger: logger}
 }
 
-func (h *RevenueHandler) GetTotalRevenueByStatus(c *gin.Context) {
+func (h *RevenueController) GetTotalRevenueByStatus(c *gin.Context) {
 	
 }
 
-func (h *RevenueHandler) GetMonthlyRevenue(c *gin.Context) {
+func (h *RevenueController) GetMonthlyRevenue(c *gin.Context) {
 	
 }
 
-func (h *RevenueHandler) GetProductRevenueDetails(c *gin.Context) {
+func (h *RevenueController) GetProductRevenueDetails(c *gin.Context) {
 	
 }

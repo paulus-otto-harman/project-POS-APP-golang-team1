@@ -18,6 +18,7 @@ type Service struct {
 	Product        ProductService
 	Order          OrderService
 	UserPermission UserPermissionService
+	Revenue        RevenueService
 }
 
 func NewService(repo repository.Repository, appConfig config.Config, log *zap.Logger) Service {
@@ -33,5 +34,6 @@ func NewService(repo repository.Repository, appConfig config.Config, log *zap.Lo
 		Product:        NewProductService(repo.Product, log),
 		Order:          NewOrderService(repo.Order, log),
 		UserPermission: NewUserPermissionService(repo.UserPermission, log),
+		Revenue:        NewRevenueService(repo.Revenue, log),
 	}
 }
