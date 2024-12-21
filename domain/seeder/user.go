@@ -25,7 +25,7 @@ func User() []domain.User {
 			Permissions: []domain.Permission{
 				{ID: 1, Name: "Dashboard"},
 				{ID: 2, Name: "Reports"},
-				{ID: 6, Name: "Settings"},
+				{ID: 6, Name: "Orders"},
 			},
 		},
 		{
@@ -36,8 +36,8 @@ func User() []domain.User {
 			PhoneNumber: "02",
 			Salary:      50,
 			Permissions: []domain.Permission{
-				{ID: 4, Name: "Orders"},
-				{ID: 5, Name: "Customers"},
+				{ID: 4, Name: "Inventory"},
+				{ID: 5, Name: "Reports"},
 			},
 		},
 	}

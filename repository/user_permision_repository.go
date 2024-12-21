@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"project/domain"
 
 	"go.uber.org/zap"
@@ -26,6 +27,7 @@ func (repo UserPermissionRepository) Create(userPermission domain.UserPermission
 	})
 }
 
-func (repo UserPermissionRepository) Update() error {
+func (repo UserPermissionRepository) Update(user domain.User) error {
+	log.Println(user.Permissions)
 	return nil
 }

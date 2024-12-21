@@ -2,11 +2,12 @@ package service
 
 import (
 	"go.uber.org/zap"
+	"project/domain"
 	"project/repository"
 )
 
 type UserPermissionService interface {
-	Update() error
+	Update(userID uint, permissions []string) error
 }
 type userPermissionService struct {
 	repo repository.UserPermissionRepository
@@ -17,6 +18,11 @@ func NewUserPermissionService(repo repository.UserPermissionRepository, log *zap
 	return &userPermissionService{repo, log}
 }
 
-func (s *userPermissionService) Update() error {
-	return nil
+func (s *userPermissionService) Update(userID uint, permissions []string) error {
+	var newPermissions []domain.Permission
+	for _, permission := range permissions {
+		newPermissions = append(newPermissions, domain.Permission{Name: permission})
+	}
+	user := domain.User{ID: userID, Permissions: newPermissions}
+	return s.repo.Update(user)
 }
