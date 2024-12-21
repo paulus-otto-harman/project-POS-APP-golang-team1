@@ -1,9 +1,9 @@
 package domain
 
 type Profile struct {
-	ID       uint `gorm:"primaryKey;autoIncrement"`
-	UserId   uint
-	FullName string  `json:"full_name"`
-	Phone    string  `json:"phone"`
-	Salary   float32 `gorm:"type:money" json:"salary"`
+	ID       uint   `gorm:"primaryKey;autoIncrement"`
+	FullName string `json:"full_name" form:"full_name" binding:"required"`
+	Email    string `json:"email" form:"email" binding:"required"`
+	Address  string `json:"address" form:"address" binding:"required"`
+	Password string `json:"password" form:"password" binding:"omitempty,min=5"`
 }
