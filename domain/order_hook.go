@@ -66,7 +66,7 @@ func changeTable(tx *gorm.DB, orderID, tableID uint) error {
 
 	if oldOrder.TableID != tableID {
 		log.Println("masuk before update oldtable != table")
-		
+
 		if err := validateTable(tx, tableID); err != nil {
 			return err
 		}
@@ -183,7 +183,6 @@ func (o *Order) BeforeUpdate(tx *gorm.DB) (err error) {
 		if err := changeTable(tx, o.ID, o.TableID); err != nil {
 			return err
 		}
-
 	}
 
 	if o.StatusPayment == OrderCancelled {
@@ -211,23 +210,6 @@ func (o *Order) AfterUpdate(tx *gorm.DB) (err error) {
 	if err := overWriteOrderItem(tx, o.ID, o.OrderItems); err != nil {
 		return err
 	}
-	// var existingItems []OrderItem
-	// if err := tx.Where("order_id = ?", o.ID).Find(&existingItems).Error; err != nil {
-	// 	return fmt.Errorf("failed to retrieve existing order items: %v", err)
-	// }
-
-	// newItemIDs := make(map[uint]bool)
-	// for _, item := range o.OrderItems {
-	// 	newItemIDs[item.ID] = true
-	// }
-
-	// for _, existingItem := range existingItems {
-	// 	if !newItemIDs[existingItem.ID] {
-	// 		if err := tx.Delete(&existingItem).Error; err != nil {
-	// 			return fmt.Errorf("failed to delete removed order item: %v", err)
-	// 		}
-	// 	}
-	// }
 	return nil
 }
 
