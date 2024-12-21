@@ -18,34 +18,34 @@ func NewRevenueRepository(db *gorm.DB, log *zap.Logger) *RevenueRepository {
 	return &RevenueRepository{db: db, log: log}
 }
 
-func (repo RevenueRepository) GetTotalRevenueByStatus() (map[string]interface{}, error) {
+func (repo *RevenueRepository) GetTotalRevenueByStatus() (map[string]interface{}, error) {
 	var results []struct {
-        StatusPayment string  `json:"status_payment"`
-        Revenue       float64 `json:"revenue"`
-    }
+		StatusPayment string  `json:"status_payment"`
+		Revenue       float64 `json:"revenue"`
+	}
 
-    err := repo.db.Model(&domain.OrderDetail{}).
-        Select("status_payment, SUM(total) as revenue").
-        Group("status_payment").
-        Scan(&results).Error
-    if err != nil {
-        return nil, err
-    }
+	err := repo.db.Model(&domain.OrderDetail{}).
+		Select("status_payment, SUM(total) as revenue").
+		Group("status_payment").
+		Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
 
 	var totalRevenue float64
-    revenueMap := make(map[string]float64)
-    for _, result := range results {
+	revenueMap := make(map[string]float64)
+	for _, result := range results {
 		totalRevenue += result.Revenue
-        revenueMap[result.StatusPayment] = result.Revenue
+		revenueMap[result.StatusPayment] = result.Revenue
 
-    }
+	}
 
 	response := map[string]interface{}{
-        "total_revenue": totalRevenue,
-        "by_status":     revenueMap,
-    }
+		"total_revenue": totalRevenue,
+		"by_status":     revenueMap,
+	}
 
-    return response, nil
+	return response, nil
 }
 
 func (repo *RevenueRepository) GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error) {
@@ -90,8 +90,25 @@ func (repo *RevenueRepository) GetMonthlyRevenue(statusPayment string, year int)
 	return result, nil
 }
 
-func (repo RevenueRepository) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {
+func (repo *RevenueRepository) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {
 	var products []*domain.ProductRevenue
 
 	return products, nil
+}
+
+func (repo *RevenueRepository) AddDailyBestSeller(profitMargin float64) {
+	repo.db.Exec(`
+		INSERT INTO best_sellers (product_id, sell_price, profit, profit_margin, revenue)
+		SELECT best.product_id, products.price, ` + fmt.Sprintf("%f", profitMargin) + `/100 * best.quantities * products.price, ` + fmt.Sprintf("%f", profitMargin) + `, best.quantities * products.price
+			FROM
+				(SELECT product_id, SUM(quantity) AS quantities
+				FROM order_items
+				JOIN orders ON order_items.order_id=orders.id
+				WHERE orders.status_payment='Completed'
+				AND orders.created_at::DATE=TIMESTAMP 'yesterday'::DATE
+				GROUP BY product_id
+				ORDER BY 2 DESC
+				LIMIT 1) best
+			JOIN products ON best.product_id=products.id
+	`)
 }

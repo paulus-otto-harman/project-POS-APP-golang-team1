@@ -36,15 +36,17 @@ func cronJobs(c *cron.Cron, ctx *infra.ServiceContext) error {
 		return err
 	}
 
+	if err := addBestSeller(c, ctx); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func updateShiftSchedule(c *cron.Cron, ctx *infra.ServiceContext) error {
-	_, err := c.AddFunc("@weekly", func() {
+	if _, err := c.AddFunc("@weekly", func() {
 		ctx.Ctl.UserHandler.UpdateShiftSchedule()
-	})
-
-	if err != nil {
+	}); err != nil {
 		fmt.Println("Error update shift schedule from cron:", err)
 		return err
 	}
@@ -53,11 +55,9 @@ func updateShiftSchedule(c *cron.Cron, ctx *infra.ServiceContext) error {
 }
 
 func sendNotificationLowStock(c *cron.Cron, ctx *infra.ServiceContext) error {
-	_, err := c.AddFunc("* * * * *", func() {
+	if _, err := c.AddFunc("* * * * *", func() {
 		ctx.Ctl.NotificationHandler.SendNotificationLowStock()
-	})
-
-	if err != nil {
+	}); err != nil {
 		fmt.Println("Error sending notification low stock from cron:", err)
 		return err
 	}
@@ -66,11 +66,9 @@ func sendNotificationLowStock(c *cron.Cron, ctx *infra.ServiceContext) error {
 }
 
 func addBestSeller(c *cron.Cron, ctx *infra.ServiceContext) error {
-	_, err := c.AddFunc("* * * * *", func() {
-		//ctx.Ctl.
-	})
-
-	if err != nil {
+	if _, err := c.AddFunc("0 1 * * *", func() {
+		ctx.Ctl.RevenueHandler.AddDailyBestSeller(ctx.Cfg.ProfitMargin)
+	}); err != nil {
 		fmt.Println("Error adding best seller from cron:", err)
 		return err
 	}

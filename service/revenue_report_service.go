@@ -11,6 +11,7 @@ type RevenueService interface {
 	GetTotalRevenueByStatus() (map[string]interface{}, error)
 	GetMonthlyRevenue(statusPayment string, year int) (map[string]float64, error)
 	GetProductRevenueDetails() ([]*domain.ProductRevenue, error)
+	AddDailyBestSeller(profitMargin float64)
 }
 
 type revenueService struct {
@@ -32,4 +33,8 @@ func (s *revenueService) GetMonthlyRevenue(statusPayment string, year int) (map[
 
 func (s *revenueService) GetProductRevenueDetails() ([]*domain.ProductRevenue, error) {
 	return s.repo.GetProductRevenueDetails()
+}
+
+func (s *revenueService) AddDailyBestSeller(profitMargin float64) {
+	s.repo.AddDailyBestSeller(profitMargin)
 }

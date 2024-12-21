@@ -80,3 +80,7 @@ type MonthlyRevenueResponse struct {
 func (ctrl *RevenueController) GetProductRevenueDetails(c *gin.Context) {
 
 }
+
+func (ctrl *RevenueController) AddDailyBestSeller(profitMargin float64) {
+	ctrl.service.AddDailyBestSeller(profitMargin)
+}
