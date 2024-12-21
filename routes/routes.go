@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -19,6 +20,9 @@ import (
 
 func NewRoutes(ctx infra.ServiceContext) {
 	r := gin.Default()
+
+	r.Static("/static", "./static")
+	r.Use(cors.Default())
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
@@ -94,9 +98,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
 	}
-	revenueRoutes := r.Group("/revenues")
+
+
+	revenueRoutes := r.Group("/revenue-reports")
 	{
-		revenueRoutes.GET("/total", ctx.Ctl.RevenueController.GetTotalRevenueByStatus)
+		revenueRoutes.GET("/status", ctx.Ctl.RevenueController.GetTotalRevenueByStatus)
 
 	}
 
