@@ -16,26 +16,64 @@ func main() {
 		log.Fatal("can't init service context %w", err)
 	}
 
-	_, err = c.AddFunc("@weekly", func() {
-		ctx.Ctl.UserHandler.UpdateShiftSchedule()
-	})
-
-	if err != nil {
-		fmt.Println("Error update shift schedule from cron:", err)
+	if err = cronJobs(c, ctx); err != nil {
 		return
 	}
 
-	_, err = c.AddFunc("* * * * *", func() {
-		ctx.Ctl.NotificationHandler.SendNotificationLowStock()
-	})
-
-	if err != nil {
-		fmt.Println("Error sending notification low stock from cron:", err)
-		return
-	}
 	// Menjalankan cron
 	c.Start()
 	// Menunggu agar main tidak langsung selesai
 	fmt.Println("Cron job berjalan. Tekan CTRL+C untuk keluar.")
 	select {}
+}
+
+func cronJobs(c *cron.Cron, ctx *infra.ServiceContext) error {
+	if err := updateShiftSchedule(c, ctx); err != nil {
+		return err
+	}
+
+	if err := sendNotificationLowStock(c, ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateShiftSchedule(c *cron.Cron, ctx *infra.ServiceContext) error {
+	_, err := c.AddFunc("@weekly", func() {
+		ctx.Ctl.UserHandler.UpdateShiftSchedule()
+	})
+
+	if err != nil {
+		fmt.Println("Error update shift schedule from cron:", err)
+		return err
+	}
+
+	return nil
+}
+
+func sendNotificationLowStock(c *cron.Cron, ctx *infra.ServiceContext) error {
+	_, err := c.AddFunc("* * * * *", func() {
+		ctx.Ctl.NotificationHandler.SendNotificationLowStock()
+	})
+
+	if err != nil {
+		fmt.Println("Error sending notification low stock from cron:", err)
+		return err
+	}
+
+	return nil
+}
+
+func addBestSeller(c *cron.Cron, ctx *infra.ServiceContext) error {
+	_, err := c.AddFunc("* * * * *", func() {
+		log.Println("Adding best seller...")
+	})
+
+	if err != nil {
+		fmt.Println("Error adding best seller from cron:", err)
+		return err
+	}
+
+	return nil
 }
