@@ -36,7 +36,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
 	r.PUT("/users/:id", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserPermissionHandler.Update)
 
-	staffRoutes := r.Group("/staffs")
+	staffRoutes := r.Group("/staffs", ctx.Middleware.CanAccess("Staff"))
 	{
 		staffRoutes.GET("/", ctx.Ctl.UserHandler.All)
 		staffRoutes.GET("/:id", ctx.Ctl.UserHandler.GetByID)
@@ -45,7 +45,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 		staffRoutes.PUT("/:id", ctx.Ctl.UserHandler.Update)
 	}
 
-	reservationsRoutes := r.Group("/reservations")
+	reservationsRoutes := r.Group("/reservations", ctx.Middleware.CanAccess("Reservations"))
 	{
 		reservationsRoutes.GET("/", ctx.Ctl.ReservationHandler.All)
 		reservationsRoutes.POST("/", ctx.Ctl.ReservationHandler.Add)
@@ -53,44 +53,34 @@ func NewRoutes(ctx infra.ServiceContext) {
 		reservationsRoutes.PUT("/:id", ctx.Ctl.ReservationHandler.Update)
 	}
 
-	categoriesRoutes := r.Group("/categories")
+	categoriesRoutes := r.Group("/categories", ctx.Middleware.CanAccess("Menu"))
 	{
 		categoriesRoutes.GET("/", ctx.Ctl.CategoryHandler.All)
 		categoriesRoutes.POST("/create", ctx.Ctl.CategoryHandler.Create)
 		categoriesRoutes.PUT("/:id", ctx.Ctl.CategoryHandler.Update)
 	}
 
-	productsRoutes := r.Group("/products")
-	{
-		productsRoutes.GET("/", ctx.Ctl.CategoryHandler.AllProducts)
-	}
+	r.GET("/products", ctx.Middleware.CanAccess("Menu"), ctx.Ctl.CategoryHandler.AllProducts)
 
-	inventoryRoutes := r.Group("/inventory")
+	inventoryRoutes := r.Group("/inventory", ctx.Middleware.CanAccess("Inventory"))
 	{
 		inventoryRoutes.GET("/", ctx.Ctl.ProductHandler.All)
 		inventoryRoutes.POST("/", ctx.Ctl.ProductHandler.Add)
 		inventoryRoutes.PUT("/:id", ctx.Ctl.ProductHandler.Update)
 		inventoryRoutes.DELETE("/:id", ctx.Ctl.ProductHandler.Delete)
 	}
-	dashboardRoutes := r.Group("/dashboard")
+
+	dashboardRoutes := r.Group("/dashboard", ctx.Middleware.CanAccess("Dashboard"))
 	{
 		dashboardRoutes.GET("/", ctx.Ctl.DashboardHandler.GetDashboard)
 		dashboardRoutes.GET("/export", ctx.Ctl.DashboardHandler.ExportSalesDataCSV)
 		dashboardRoutes.GET("/ws", ctx.Ctl.DashboardHandler.SalesDataWebSocket)
-
 	}
 
-	tablesRoutes := r.Group("/tables")
-	{
-		tablesRoutes.GET("/", ctx.Ctl.OrderHandler.AllTables)
-	}
+	r.GET("/tables", ctx.Ctl.OrderHandler.AllTables)
+	r.GET("/payments", ctx.Ctl.OrderHandler.AllPayments)
 
-	paymentsRoutes := r.Group("/payments")
-	{
-		paymentsRoutes.GET("/", ctx.Ctl.OrderHandler.AllPayments)
-	}
-
-	ordersRoutes := r.Group("/orders")
+	ordersRoutes := r.Group("/orders", ctx.Middleware.CanAccess("Orders"))
 	{
 		ordersRoutes.GET("/", ctx.Ctl.OrderHandler.AllOrders)
 		ordersRoutes.POST("/", ctx.Ctl.OrderHandler.Create)
@@ -100,13 +90,13 @@ func NewRoutes(ctx infra.ServiceContext) {
 
 	notificationRoutes := r.Group("/notifications")
 	{
-		notificationRoutes.GET("/:user_id", ctx.Ctl.NotificationHandler.All)
+		notificationRoutes.GET("/", ctx.Ctl.NotificationHandler.All)
 		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
 		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
 	}
 
-	revenueRoutes := r.Group("/revenue-reports")
+	revenueRoutes := r.Group("/revenue-reports", ctx.Middleware.CanAccess("Reports"))
 	{
 		revenueRoutes.GET("/status", ctx.Ctl.RevenueHandler.GetTotalRevenueByStatus)
 		revenueRoutes.GET("/bestsellers", ctx.Ctl.RevenueHandler.GetProductRevenueDetails)
