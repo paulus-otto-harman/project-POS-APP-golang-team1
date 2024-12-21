@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -19,6 +20,9 @@ import (
 
 func NewRoutes(ctx infra.ServiceContext) {
 	r := gin.Default()
+
+	r.Static("/static", "./static")
+	r.Use(cors.Default())
 
 	r.Use(ctx.Middleware.Logger())
 	r.POST("/login", ctx.Ctl.AuthHandler.Login)
@@ -30,7 +34,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
 	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
-	r.PUT("/users/:id/permissions", ctx.Middleware.OnlySuperAdmin(), nil)
+	r.PUT("/users/:id", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserPermissionHandler.Update)
 
 	staffRoutes := r.Group("/staffs")
 	{
@@ -94,9 +98,23 @@ func NewRoutes(ctx infra.ServiceContext) {
 		ordersRoutes.DELETE("/:id", ctx.Ctl.OrderHandler.Delete)
 	}
 
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	notificationRoutes := r.Group("/notifications")
+	{
+		notificationRoutes.GET("/:user_id", ctx.Ctl.NotificationHandler.All)
+		notificationRoutes.PUT("/:id", ctx.Ctl.NotificationHandler.Update)
+		notificationRoutes.PUT("/batch", ctx.Ctl.NotificationHandler.BatchUpdate)
+		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
+	}
 
-	notificationRoutes(ctx, r)
+	revenueRoutes := r.Group("/revenue-reports")
+	{
+		revenueRoutes.GET("/status", ctx.Ctl.RevenueHandler.GetTotalRevenueByStatus)
+		revenueRoutes.GET("/bestsellers", ctx.Ctl.RevenueHandler.GetProductRevenueDetails)
+		revenueRoutes.GET("/monthly_revenue", ctx.Ctl.RevenueHandler.GetMonthlyRevenue)
+
+	}
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
 }

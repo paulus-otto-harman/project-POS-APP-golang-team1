@@ -104,16 +104,53 @@ func (s *userService) Delete(id uint) error {
 	return s.repo.User.Delete(id)
 }
 
-func (s *userService) Update(user domain.User) error {
-	existedUser, err := s.repo.User.Get(user)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-	if existedUser != nil && existedUser.ID != user.ID {
-		return errors.New("user email already exists")
+func (s *userService) Update(updatedUser domain.User) error {
+	existedUser, err := s.repo.User.Get(domain.User{ID: updatedUser.ID})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("user not found")
 	}
 
-	return s.repo.User.Update(&user)
+	if err != nil {
+		return err
+	}
+
+	mergeExistingUserWithUpdatedUser(existedUser, updatedUser)
+
+	if err = s.repo.User.Update(existedUser); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func mergeExistingUserWithUpdatedUser(existingUser *domain.User, updatedUser domain.User) {
+	existingUser.FullName = shouldUpdate(existingUser.FullName, updatedUser.FullName)
+	existingUser.Email = shouldUpdate(existingUser.Email, updatedUser.Email)
+	existingUser.Role = shouldUpdate(existingUser.Role, updatedUser.Role)
+	existingUser.ProfilePhoto = shouldUpdate(existingUser.ProfilePhoto, updatedUser.ProfilePhoto)
+	existingUser.PhoneNumber = shouldUpdate(existingUser.PhoneNumber, updatedUser.PhoneNumber)
+	existingUser.Salary = shouldUpdate(existingUser.Salary, updatedUser.Salary)
+	existingUser.BirthDate = shouldUpdate(existingUser.BirthDate, updatedUser.BirthDate)
+	existingUser.ShiftStart = shouldUpdate(existingUser.ShiftStart, updatedUser.ShiftStart)
+	existingUser.ShiftEnd = shouldUpdate(existingUser.ShiftEnd, updatedUser.ShiftEnd)
+	existingUser.Address = shouldUpdate(existingUser.Address, updatedUser.Address)
+	existingUser.AdditionalDetails = shouldUpdate(existingUser.AdditionalDetails, updatedUser.AdditionalDetails)
+
+	if updatedUser.Password == "" {
+		return
+	}
+
+	hashedUpdatedPassword := helper.HashPassword(updatedUser.Password)
+	if !helper.CheckPassword(hashedUpdatedPassword, existingUser.Password) {
+		existingUser.Password = hashedUpdatedPassword
+	}
+}
+
+func shouldUpdate[T comparable](existing, updated T) T {
+	if existing != updated {
+		return updated
+	}
+	return existing
 }
 
 func (s *userService) GetByID(userInput domain.User) (*domain.User, error) {

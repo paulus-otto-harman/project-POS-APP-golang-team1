@@ -9,6 +9,8 @@ import (
 )
 
 type Repository struct {
+	Product          ProductRepository
+	UserPermission   UserPermissionRepository
 	Auth             AuthRepository
 	PasswordReset    PasswordResetRepository
 	User             UserRepository
@@ -17,9 +19,8 @@ type Repository struct {
 	Category         CategoryRepository
 	Order            OrderRepository
 	UserNotification UserNotificationRepository
-	Product          ProductRepository
-	UserPermission   UserPermissionRepository
 	Dashboard        DashboardRepository
+	Revenue          RevenueRepository
 }
 
 func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, log *zap.Logger) Repository {
@@ -35,5 +36,6 @@ func NewRepository(db *gorm.DB, cacher database.Cacher, config config.Config, lo
 		Product:          *NewProductRepository(db, log),
 		UserPermission:   *NewUserPermissionRepository(db, log),
 		Dashboard:        *NewDashboardRepository(db, log),
+		Revenue:          *NewRevenueRepository(db, log),
 	}
 }

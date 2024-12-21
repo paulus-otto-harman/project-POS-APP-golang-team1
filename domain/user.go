@@ -33,7 +33,6 @@ type User struct {
 	UpdatedAt         time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"index:,unique,composite:emaildeletedat" json:"-"`
 
-	Profile             Profile              `json:"profile"`
 	Permissions         []Permission         `gorm:"many2many:user_permissions;" json:"permissions"`
 	PasswordResetTokens []PasswordResetToken `json:"-"`
 	Notifications       []Notification       `gorm:"many2many:user_notifications" json:"user_notifications"` // Reference the join table
