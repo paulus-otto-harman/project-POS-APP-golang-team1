@@ -49,6 +49,7 @@ func LoadConfig() (Config, error) {
 
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("..")
+	viper.AddConfigPath("../..")
 	viper.SetConfigType("dotenv")
 	viper.SetConfigName(".env")
 

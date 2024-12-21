@@ -38,6 +38,7 @@ func autoMigrates(db *gorm.DB) error {
 		&domain.Order{},
 		&domain.OrderItem{},
 		&domain.PasswordResetToken{},
+		&domain.BestSeller{},
 	)
 }
 
@@ -57,6 +58,7 @@ func dropTables(db *gorm.DB) error {
 		"user_permissions",
 		&domain.UserNotification{},
 		// &domain.Inventory{},
+		&domain.BestSeller{},
 	)
 }
 

@@ -30,7 +30,7 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
-	// r.Use(ctx.Middleware.Jwt.AuthJWT())
+	r.Use(ctx.Middleware.Jwt.AuthJWT())
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
 	r.GET("/users", ctx.Middleware.OnlySuperAdmin(), ctx.Ctl.UserHandler.All)
@@ -99,18 +99,11 @@ func NewRoutes(ctx infra.ServiceContext) {
 		notificationRoutes.DELETE("/:id", ctx.Ctl.NotificationHandler.Delete)
 	}
 
-
 	revenueRoutes := r.Group("/revenue-reports")
 	{
-		revenueRoutes.GET("/status", ctx.Ctl.RevenueController.GetTotalRevenueByStatus)
+		revenueRoutes.GET("/status", ctx.Ctl.RevenueHandler.GetTotalRevenueByStatus)
+		revenueRoutes.GET("/bestsellers", ctx.Ctl.RevenueHandler.GetProductRevenueDetails)
 
-	}
-
-	reportRoutes := r.Group("/reports")
-	{
-		reportRoutes.GET("/bestsellers", func(c *gin.Context) {
-			c.JSON(200, gin.H{})
-		})
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
