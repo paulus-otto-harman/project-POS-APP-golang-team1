@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	_ "project/docs"
 	"project/infra"
 	"project/routes"
 )

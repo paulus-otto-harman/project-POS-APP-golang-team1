@@ -33,7 +33,7 @@ func NewProductController(service service.ProductService, logger *zap.Logger) *P
 // @Param quantity query int false "Specific product quantity"
 // @Param min_price query float64 false "Minimum price filter"
 // @Param max_price query float64 false "Maximum price filter"
-// @Success 200 {object} domain.DataPage{data=[]domain.product} "Fetch success"
+// @Success 200 {object} domain.DataPage{data=[]domain.Product} "Fetch success"
 // @Failure 404 {object} Response "product not found"
 // @Failure 500 {object} Response "Internal server error"
 // @Router /product/ [get]
@@ -82,8 +82,8 @@ func (ctrl *ProductController) All(c *gin.Context) {
 // @Tags Inventory
 // @Accept  json
 // @Produce json
-// @Param inventory body InventoryInput true "Inventory data"
-// @Success 201 {object} domain.Inventory "Inventory created successfully"
+// * @Param inventory body struct true "Inventory data"
+// @Success 201 {object} domain.Product "Inventory created successfully"
 // @Failure 400 {object} Response "Bad Request"
 // @Failure 404 {object} Response "Category not found"
 // @Failure 500 {object} Response "Internal Server Error"
@@ -137,9 +137,9 @@ func (ctrl *ProductController) Add(c *gin.Context) {
 // @Accept  json
 // @Produce json
 // @Param id path int true "Inventory ID"
-// @Param inventory body domain.Inventory true "Inventory data"
+// @Param inventory body domain.Product true "Inventory data"
 // @Param category_name query string false "Category name to update category ID"
-// @Success 200 {object} domain.Inventory "Inventory updated successfully"
+// @Success 200 {object} domain.Product "Inventory updated successfully"
 // @Failure 404 {object} Response "Inventory not found"
 // @Failure 400 {object} Response "Bad request"
 // @Failure 500 {object} Response "Internal server error"
@@ -179,9 +179,9 @@ func (ctrl *ProductController) Update(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "product ID"
-// @Success 200 {object} domain.Response "product soft deleted successfully"
-// @Failure 400 {object} domain.Response "Invalid product ID"
-// @Failure 500 {object} domain.Response "Failed to soft delete product"
+// @Success 200 {object} handler.Response "product soft deleted successfully"
+// @Failure 400 {object} handler.Response "Invalid product ID"
+// @Failure 500 {object} handler.Response "Failed to soft delete product"
 // @Router /product/{id}/soft-delete [delete]
 func (ctrl *ProductController) Delete(c *gin.Context) {
 	id := c.Param("id")

@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/cors"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func NewRoutes(ctx infra.ServiceContext) {
@@ -77,8 +77,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 		dashboardRoutes.GET("/ws", ctx.Ctl.DashboardHandler.SalesDataWebSocket)
 	}
 
-	r.GET("/tables", ctx.Ctl.OrderHandler.AllTables)
-	r.GET("/payments", ctx.Ctl.OrderHandler.AllPayments)
+	r.GET("/tables", ctx.Middleware.CanAccess("Orders"), ctx.Ctl.OrderHandler.AllTables)
+	r.GET("/payments", ctx.Middleware.CanAccess("Orders"), ctx.Ctl.OrderHandler.AllPayments)
 
 	ordersRoutes := r.Group("/orders", ctx.Middleware.CanAccess("Orders"))
 	{
