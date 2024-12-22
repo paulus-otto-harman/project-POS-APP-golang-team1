@@ -23,6 +23,17 @@ func NewProfileController(service service.Service, logger *zap.Logger, cacher da
 	return &ProfileController{service, logger, jwt, cacher}
 }
 
+// Logout endpoint
+// @Summary User logout
+// @Description sign out user
+// @Description <br/><strong>PLEASE ADD "Bearer " TO AUTHORIZATION HEADER !</strong>
+// @Tags Profile
+// @Produce  json
+// @Success 200 {object} Response "user logged out"
+// @Failure 401 {object} Response "invalid authorization header"
+// @Failure 401 {object} Response "fail to validate signature or session expired"
+// @Router  /logout [post]
+// @Security Bearer
 func (ctrl *ProfileController) Logout(c *gin.Context) {
 	userID := c.GetString("user-id")
 	ctrl.cacher.HDel(fmt.Sprintf("user:%d", userID), "role")
@@ -31,6 +42,22 @@ func (ctrl *ProfileController) Logout(c *gin.Context) {
 	GoodResponseWithData(c, "user logged out", http.StatusOK, nil)
 }
 
+// Update endpoint
+// @Summary Update User Profile
+// @Description update user profile
+// @Description <br/><strong>PLEASE ADD "Bearer " TO AUTHORIZATION HEADER !</strong>
+// @Tags Profile
+// @Accept mpfd
+// @Produce  json
+// @Param full_name formData string true "update user full name"
+// @Param email formData string true "update user email"
+// @Param address formData string true "update user address"
+// @Param password formData string false "change password"
+// @Success 200 {object} Response "user updated"
+// @Failure 401 {object} Response "invalid authorization header"
+// @Failure 401 {object} Response "Invalid input"
+// @Router  /profile [put]
+// @Security Bearer
 func (ctrl *ProfileController) Update(c *gin.Context) {
 	userID, err := helper.Uint(c.GetString("user-id"))
 	if err != nil {

@@ -30,6 +30,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
 	r.PUT("/profile", ctx.Ctl.ProfileHandler.Update)
@@ -103,8 +105,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 		revenueRoutes.GET("/monthly_revenue", ctx.Ctl.RevenueHandler.GetMonthlyRevenue)
 
 	}
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
 }
