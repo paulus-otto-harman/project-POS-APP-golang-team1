@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/cors"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func NewRoutes(ctx infra.ServiceContext) {
@@ -29,6 +29,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 	r.POST("/otp", ctx.Ctl.PasswordResetHandler.Create)
 	r.PUT("/otp/:id", ctx.Ctl.PasswordResetHandler.Update)
 	r.PUT("/user/:id", ctx.Ctl.UserHandler.UpdatePassword)
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.Use(ctx.Middleware.Jwt.AuthJWT())
 	r.POST("/logout", ctx.Ctl.ProfileHandler.Logout)
@@ -77,8 +79,8 @@ func NewRoutes(ctx infra.ServiceContext) {
 		dashboardRoutes.GET("/ws", ctx.Ctl.DashboardHandler.SalesDataWebSocket)
 	}
 
-	r.GET("/tables", ctx.Ctl.OrderHandler.AllTables)
-	r.GET("/payments", ctx.Ctl.OrderHandler.AllPayments)
+	r.GET("/tables", ctx.Middleware.CanAccess("Orders"), ctx.Ctl.OrderHandler.AllTables)
+	r.GET("/payments", ctx.Middleware.CanAccess("Orders"), ctx.Ctl.OrderHandler.AllPayments)
 
 	ordersRoutes := r.Group("/orders", ctx.Middleware.CanAccess("Orders"))
 	{
@@ -103,8 +105,6 @@ func NewRoutes(ctx infra.ServiceContext) {
 		revenueRoutes.GET("/monthly_revenue", ctx.Ctl.RevenueHandler.GetMonthlyRevenue)
 
 	}
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	gracefulShutdown(ctx, r.Handler())
 }

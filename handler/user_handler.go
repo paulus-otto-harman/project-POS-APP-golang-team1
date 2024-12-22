@@ -187,6 +187,15 @@ func (ctrl *UserController) Registration(c *gin.Context) {
 	GoodResponseWithData(c, "user registered", http.StatusCreated, user)
 }
 
+// Reset Password endpoint
+// @Summary Reset Password
+// @Description reset user password. user can only reset their password after successfully validating the OTP.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} handler.Response "OTP sent"
+// @Failure 500 {object} handler.Response "failed to send OTP"
+// @Router  /user/:id [put]
 func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

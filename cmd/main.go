@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	_ "project/docs"
 	"project/infra"
 	"project/routes"
 )
@@ -22,6 +23,7 @@ import (
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
+// @description <h5>Please type "Bearer", following with a space, and then the JWT token</h5>
 
 func main() {
 	ctx, err := infra.NewServiceContext()
