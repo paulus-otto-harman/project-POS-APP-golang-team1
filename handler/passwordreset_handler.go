@@ -19,14 +19,14 @@ func NewPasswordResetController(service service.Service, logger *zap.Logger) *Pa
 }
 
 // Request OTP endpoint
-// @Summary Validate Email
+// @Summary Check Email
 // @Description request OTP to reset password. Email must be valid
 // @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} handler.Response "OTP sent"
 // @Failure 500 {object} handler.Response "failed to send OTP"
-// @Router  /password-reset [post]
+// @Router  /otp [post]
 func (ctrl *PasswordResetController) Create(c *gin.Context) {
 	var requestOTP domain.RequestOTP
 
@@ -65,6 +65,15 @@ type EmailData struct {
 	OTP string
 }
 
+// Validate OTP endpoint
+// @Summary Validasi OTP
+// @Description validate an OTP to reset password. If OTP is valid, user may change their password.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} handler.Response "OTP sent"
+// @Failure 500 {object} handler.Response "failed to send OTP"
+// @Router  /otp/:id [put]
 func (ctrl *PasswordResetController) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

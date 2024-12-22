@@ -25,7 +25,7 @@ func NewAuthController(service service.AuthService, logger *zap.Logger, cacher d
 }
 
 // Login endpoint
-// @Summary User login
+// @Summary Login
 // @Description authenticate user
 // @Tags Auth
 // @Accept  json
